@@ -1,0 +1,19 @@
+{% extends 'common/base.html' %}
+
+{% load static %}
+
+{% block title %}Home - eVoteHub{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock %}
+
+{% block content %}
+    <main>
+        <section>
+            <h2>Digitizing Campus Elections</h2>
+            <p>eVoteHub is a digital election management system designed to streamline campus elections, making the process fair, transparent, and efficient.</p>
+            <a href="{% url 'register' %}" class="cta-button">Get Started</a>
+        </section>
+    </main>
+{% endblock %}
