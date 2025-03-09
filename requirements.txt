@@ -1,0 +1,7 @@
+Django==4.2  
+django-widget-tweaks==1.5.0  
+pillow==10.0.1  # For handling images (candidate photos)  
+django-crispy-forms>=2.3  # For better form styling  
+crispy-bootstrap5==2024.10  # Bootstrap 5 support for crispy forms  
+django-filter==23.3  # For filtering election data  
+# gunicorn==21.2.0  # If you plan to deploy on a production server 

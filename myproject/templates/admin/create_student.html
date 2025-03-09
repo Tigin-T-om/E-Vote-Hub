@@ -1,0 +1,14 @@
+{% extends "common/base.html" %}
+{% block title %}Create Student - eVoteHub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Create Student Account</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Create Student</button>
+    </form>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

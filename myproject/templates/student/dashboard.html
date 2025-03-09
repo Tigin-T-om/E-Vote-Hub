@@ -1,0 +1,149 @@
+{% extends "common/base.html" %}
+{% load static %}
+
+{% block title %}Student Dashboard - eVoteHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/student/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Student Dashboard</h1>
+    <div class="user-greeting">
+        <div class="user-avatar">{{ user.first_name.0 }}{{ user.last_name.0 }}</div>
+        <div class="user-info">
+            <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+            <p>{{ user.student_profile.department }}, Year {{ user.student_profile.year }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3><i class="fas fa-vote-yea"></i> Active Elections</h3>
+        <p>{{ active_elections_count }}</p>
+        <div class="stat-info">{{ unvoted_elections_count }} require your vote</div>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-check-circle"></i> Completed Votes</h3>
+        <p>{{ completed_votes_count }}</p>
+        <div class="stat-info">This semester</div>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-calendar-alt"></i> Upcoming</h3>
+        <p>{{ upcoming_elections_count }}</p>
+        <div class="stat-info">In the next 30 days</div>
+    </div>
+    <div class="stat-card">
+        <h3><i class="fas fa-users"></i> Participation Rate</h3>
+        <p>{{ participation_rate }}%</p>
+        <div class="stat-info">{% if participation_rate > campus_average %}Above{% else %}Below{% endif %} campus average</div>
+    </div>
+</div>
+
+<div class="dashboard-sections">
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Current Elections</h2>
+            <a href="#">View All <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <ul class="elections-list">
+            {% for election in active_elections %}
+            <li class="election-item">
+                <div class="election-header">
+                    <span class="election-title">{{ election.title }}</span>
+                    <span class="election-status status-{{ election.status|lower }}">{{ election.status }}</span>
+                </div>
+                <div class="election-info">
+                    {% if election.status == 'Active' %}
+                    <div><i class="fas fa-clock"></i> Ends in {{ election.days_remaining }} days</div>
+                    <div><i class="fas fa-users"></i> {{ election.votes_cast }} votes cast</div>
+                    {% elif election.status == 'Upcoming' %}
+                    <div><i class="fas fa-calendar-alt"></i> Starts in {{ election.days_until_start }} days</div>
+                    <div><i class="fas fa-clock"></i> {{ election.duration_days }} day duration</div>
+                    {% endif %}
+                </div>
+                <div class="election-candidates">
+                    {% for candidate in election.candidates|slice:":3" %}
+                    <div class="candidate-avatar">{{ candidate.user.first_name.0 }}{{ candidate.user.last_name.0 }}</div>
+                    {% endfor %}
+                    {% if election.candidates.count > 3 %}
+                    <span class="candidate-count">+{{ election.candidates.count|add:"-3" }} more</span>
+                    {% endif %}
+                </div>
+                <div class="election-actions">
+                    <a href="{% url 'elections:detail' election.id %}" class="cta-button cta-button-outline">View Details</a>
+                    {% if election.status == 'Active' and not election.user_has_voted %}
+                    <a href="{% url 'elections:vote' election.id %}" class="cta-button">Cast Vote</a>
+                    {% elif election.status == 'Upcoming' %}
+                    <a href="{% url 'elections:set_reminder' election.id %}" class="cta-button cta-button-outline">Set Reminder</a>
+                    {% if election.has_proposals %}
+                    <a href="{% url 'elections:proposals' election.id %}" class="cta-button cta-button-outline">View Proposals</a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </li>
+            {% empty %}
+            <li class="election-item empty-list">
+                <p>No active elections at the moment.</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Notifications</h2>
+            <a href="#">Mark All Read <i class="fas fa-check"></i></a>
+        </div>
+        <div class="notifications-list">
+            {% for notification in notifications %}
+            <div class="notification-item">
+                <div class="notification-icon">
+                    <i class="fas fa-{{ notification.icon }}"></i>
+                </div>
+                <div class="notification-content">
+                    <p>{{ notification.message }}</p>
+                    <span class="notification-time">{{ notification.created_at|timesince }} ago</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="notification-item empty-list">
+                <p>No new notifications.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <div class="calendar-title">{{ current_month_name }} {{ current_year }}</div>
+                <div class="calendar-nav">
+                    <a href="?month={{ prev_month }}&year={{ prev_year }}"><i class="fas fa-chevron-left"></i></a>
+                    <a href="?month={{ next_month }}&year={{ next_year }}"><i class="fas fa-chevron-right"></i></a>
+                </div>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-weekdays">
+                    <div>Su</div>
+                    <div>Mo</div>
+                    <div>Tu</div>
+                    <div>We</div>
+                    <div>Th</div>
+                    <div>Fr</div>
+                    <div>Sa</div>
+                </div>
+                <div class="calendar-days">
+                    {% for day in calendar_days %}
+                    <div class="calendar-day {% if day.date == today %}current{% endif %} {% if day.has_event %}has-event{% endif %} {% if day.is_padding %}padding{% endif %}" {% if not day.is_padding %}data-date="{{ day.date|date:'Y-m-d' }}"{% endif %}>
+                        {% if not day.is_padding %}{{ day.date.day }}{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% endblock %}

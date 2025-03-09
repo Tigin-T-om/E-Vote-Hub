@@ -1,19 +1,89 @@
 {% extends 'common/base.html' %}
-
 {% load static %}
 
-{% block title %}Home - eVoteHub{% endblock %}
+{% block title %}eVoteHub - Secure Digital Voting{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 {% endblock %}
 
 {% block content %}
-    <main>
-        <section>
-            <h2>Digitizing Campus Elections</h2>
-            <p>eVoteHub is a digital election management system designed to streamline campus elections, making the process fair, transparent, and efficient.</p>
-            <a href="{% url 'register' %}" class="cta-button">Get Started</a>
-        </section>
-    </main>
+<section class="hero">
+    <div class="hero-content">
+        <h2>Secure & Transparent Digital Voting</h2>
+        <p>Experience the future of democracy with our cutting-edge electronic voting platform.</p>
+        <div class="hero-buttons">
+            <a href="{% url 'login' %}" class="cta-button primary">Get Started</a>
+            <a href="{% url 'about' %}" class="cta-button secondary">Learn More</a>
+        </div>
+    </div>
+    <!-- <div class="hero-image">
+        <img src="{% static 'images/voting-illustration.svg' %}" alt="Secure Voting Illustration">
+    </div> -->
+</section>
+<!-- 
+<section class="features">
+    <h3 class="section-title">Why Choose eVoteHub?</h3>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4>Secure & Encrypted</h4>
+            <p>End-to-end encryption ensures your vote remains private and tamper-proof.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h4>Verified Results</h4>
+            <p>Transparent counting process with verifiable results for complete trust.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h4>Vote Anywhere</h4>
+            <p>Cast your vote from any device with internet access, anywhere in the world.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h4>Real-time Analytics</h4>
+            <p>Watch results unfold in real-time with our advanced analytics dashboard.</p>
+        </div>
+    </div>
+</section>
+
+
+<section class="testimonials">
+    <h3 class="section-title">What Our Users Say</h3>
+    <div class="testimonials-slider">
+        <div class="testimonial-card">
+            <div class="testimonial-content">
+                <p>"eVoteHub transformed our student council elections with its secure and easy-to-use platform."</p>
+            </div>
+            <div class="testimonial-author">
+                <img src="{% static 'images/testimonial1.jpg' %}" alt="University Administrator">
+                <div>
+                    <h4>Sarah Johnson</h4>
+                    <p>University Administrator</p>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial-card">
+            <div class="testimonial-content">
+                <p>"The real-time results feature helped us maintain transparency throughout our board elections."</p>
+            </div>
+            <div class="testimonial-author">
+                <img src="{% static 'images/testimonial2.jpg' %}" alt="Corporate Director">
+                <div>
+                    <h4>Michael Chen</h4>
+                    <p>Corporate Director</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> -->
 {% endblock %}

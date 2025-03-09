@@ -1,44 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - eVoteHub</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body>
-    <header>
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block title %}Contact - eVoteHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/common/contact.css' %}">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="contact-hero">
+    <div class="container">
         <h1>Contact Us</h1>
-    </header>
-    
-    <main>
-        <section>
-            <h2>Get in Touch</h2>
-            <p>If you have any questions or need support, feel free to contact us.</p>
-        </section>
+        <p>We're here to help with your questions and concerns</p>
+    </div>
+</section>
+
+<div class="contact-container">
+    <!-- Contact Info Section -->
+    <section class="contact-info">
+        <h2><i class="fas fa-info-circle icon-accent"></i> Get in Touch</h2>
+        <p>If you have any questions about eVoteHub or need support with our platform, feel free to reach out to us using any of the methods below.</p>
         
-        <section>
-            <form method="POST" action="{% url 'contact' %}">
-                {% csrf_token %}
-                <div class="input-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
+        <div class="contact-methods">
+            <div class="contact-method">
+                <i class="fas fa-envelope method-icon"></i>
+                <div class="method-details">
+                    <h3>Email Us</h3>
+                    <p>support@evotehub.com</p>
+                    <p>For general inquiries: info@evotehub.com</p>
                 </div>
-                <div class="input-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="contact-method">
+                <i class="fas fa-phone-alt method-icon"></i>
+                <div class="method-details">
+                    <h3>Call Us</h3>
+                    <p>Support: (555) 123-4567</p>
+                    <p>Hours: Monday-Friday, 9am-5pm EST</p>
                 </div>
-                <div class="input-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" rows="4" required></textarea>
+            </div>
+            
+            <div class="contact-method">
+                <i class="fas fa-map-marker-alt method-icon"></i>
+                <div class="method-details">
+                    <h3>Visit Us</h3>
+                    <p>123 Tech Avenue, Suite 400</p>
+                    <p>Innovation City, CA 94043</p>
                 </div>
-                <button type="submit">Send Message</button>
-            </form>
-        </section>
-    </main>
-    
-    <footer>
-        <p>&copy; 2025 eVoteHub. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-form-section">
+        <h2><i class="fas fa-paper-plane icon-accent"></i> Send a Message</h2>
+        
+        {% if messages %}
+        <div class="message-container">
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{% url 'contact' %}" class="contact-form">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="input-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" placeholder="Your name" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Your email" required>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="subject">Subject</label>
+                <input type="text" id="subject" name="subject" placeholder="What is this regarding?" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="6" placeholder="How can we help you?" required></textarea>
+            </div>
+            
+            <button type="submit" class="submit-button">Send Message</button>
+        </form>
+    </section>
+</div>
+
+<!-- FAQ Section -->
+<section class="faq-section">
+    <div class="container">
+        <h2 class="centered-heading"><i class="fas fa-question-circle icon-accent"></i> Frequently Asked Questions</h2>
+        
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How quickly can we implement eVoteHub at our school?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Most implementations take 2-4 weeks from initial setup to being fully operational. Our team will work with you to ensure a smooth transition and provide training for all system administrators.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Is eVoteHub compatible with our existing student information system?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>eVoteHub is designed to integrate with most major student information systems. We offer APIs and custom integration services to ensure compatibility with your existing infrastructure.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How secure is the voting process?</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Security is our top priority. eVoteHub employs end-to-end encryption, secure authentication protocols, and regular security audits. Each vote is anonymous yet verifiable, ensuring both privacy and integrity.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle FAQ answers
+        const faqItems = document.querySelectorAll('.faq-question');
+        faqItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.classList.toggle('active');
+                
+                // Toggle icon
+                const icon = this.querySelector('i');
+                if (parent.classList.contains('active')) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                } else {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

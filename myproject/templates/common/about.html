@@ -1,40 +1,172 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - eVoteHub</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-</head>
-<body>
-    <header>
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block title %}About - eVoteHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/common/about.css' %}">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
         <h1>About eVoteHub</h1>
-    </header>
-    
-    <main>
-        <section>
-            <h2>Our Mission</h2>
-            <p>eVoteHub is designed to revolutionize campus elections by providing a seamless, transparent, and digital voting experience.</p>
-        </section>
-        
-        <section>
-            <h2>How It Works</h2>
-            <ul>
-                <li>Students can nominate themselves for elections.</li>
-                <li>HoDs review and approve/reject nominations.</li>
-                <li>The Presiding Officer finalizes candidates and sets up online voting.</li>
-                <li>Students vote in two phases: Class Representatives & Higher Positions.</li>
+        <p>Revolutionizing campus elections with transparency and convenience</p>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="about-section">
+    <div class="about-content">
+        <div class="about-text">
+            <h2><i class="fas fa-bullseye icon-accent"></i> Our Mission</h2>
+            <p>eVoteHub is designed to revolutionize campus elections by providing a seamless, transparent, and secure digital voting experience. We believe that student governance should be accessible to all, with a voting process that is both efficient and trustworthy.</p>
+            <p>Our platform was built with the core values of:</p>
+            <ul class="feature-list">
+                <li><span>Transparency</span> - Every step of the election process is visible and trackable</li>
+                <li><span>Security</span> - Advanced encryption and verification systems protect vote integrity</li>
+                <li><span>Accessibility</span> - A user-friendly interface that works on any device</li>
+                <li><span>Fairness</span> - Equal opportunities for all candidates with standardized processes</li>
             </ul>
-        </section>
-        
-        <section>
-            <h2>Why Choose eVoteHub?</h2>
-            <p>eVoteHub eliminates manual paperwork, prevents fraud, and ensures a fair election process with secure online voting.</p>
-        </section>
-    </main>
-    
-    <footer>
-        <p>&copy; 2025 eVoteHub. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+        </div>
+        <div class="about-image">
+            <div class="image-placeholder">
+                <i class="fas fa-university"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="about-section">
+    <div class="about-content reverse">
+        <div class="about-image">
+            <div class="image-placeholder">
+                <i class="fas fa-cogs"></i>
+            </div>
+        </div>
+        <div class="about-text">
+            <h2><i class="fas fa-question-circle icon-accent"></i> How It Works</h2>
+            <div class="process-steps">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Nominations</h3>
+                        <p>Students can easily nominate themselves for elections through our secure portal, submitting all required documentation digitally.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Verification</h3>
+                        <p>Department Heads review and approve/reject nominations based on eligibility criteria, with automated notifications to candidates.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Election Setup</h3>
+                        <p>The Presiding Officer finalizes the candidate list and configures the voting system with specific dates, positions, and rules.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Two-Phase Voting</h3>
+                        <p>Students participate in a structured voting process - first electing Class Representatives, followed by Higher Position elections.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Section -->
+<section class="about-section">
+    <h2 class="centered-heading"><i class="fas fa-check-circle icon-accent"></i> Why Choose eVoteHub?</h2>
+    <div class="benefits-grid">
+        <div class="benefit-card">
+            <i class="fas fa-shield-alt benefit-icon"></i>
+            <h3>Secure Voting</h3>
+            <p>End-to-end encryption ensures that every vote remains confidential while preventing any tampering or fraudulent activities.</p>
+        </div>
+        <div class="benefit-card">
+            <i class="fas fa-clock benefit-icon"></i>
+            <h3>Time Efficient</h3>
+            <p>Eliminate lengthy queues and manual counting processes, reducing the election cycle from weeks to just days.</p>
+        </div>
+        <div class="benefit-card">
+            <i class="fas fa-chart-bar benefit-icon"></i>
+            <h3>Real-time Results</h3>
+            <p>Access instant tabulation and visual data representations of voting outcomes once the polling period concludes.</p>
+        </div>
+        <div class="benefit-card">
+            <i class="fas fa-leaf benefit-icon"></i>
+            <h3>Eco-Friendly</h3>
+            <p>Our paperless approach eliminates the need for printed ballots, posters, and forms, reducing your campus's environmental footprint.</p>
+        </div>
+        <div class="benefit-card">
+            <i class="fas fa-universal-access benefit-icon"></i>
+            <h3>Inclusive Platform</h3>
+            <p>Designed with accessibility features to ensure all students can participate regardless of physical abilities or location.</p>
+        </div>
+        <div class="benefit-card">
+            <i class="fas fa-history benefit-icon"></i>
+            <h3>Transparent History</h3>
+            <p>Maintain a complete digital archive of past elections, candidates, and results for institutional record-keeping and transparency.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="about-section testimonials">
+    <h2 class="centered-heading"><i class="fas fa-quote-left icon-accent"></i> User Testimonials</h2>
+    <div class="testimonial-slider">
+        <div class="testimonial">
+            <div class="testimonial-content">
+                <p>"eVoteHub transformed our student council elections completely. The process was smooth, transparent, and we saw a 45% increase in voter participation!"</p>
+                <div class="testimonial-author">
+                    <div class="author-name">Dr. Sarah Johnson</div>
+                    <div class="author-role">Faculty Advisor, State University</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-content">
+                <p>"As a student body president, I appreciate how eVoteHub made our election process more accessible and eliminated concerns about ballot tampering."</p>
+                <div class="testimonial-author">
+                    <div class="author-name">Miguel Rodriguez</div>
+                    <div class="author-role">Student Body President, Tech Institute</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <h2>Ready to modernize your campus elections?</h2>
+    <p>Join hundreds of educational institutions that have transformed their democratic processes with eVoteHub.</p>
+    <div class="cta-buttons">
+        <a href="{% url 'contact' %}" class="cta-button">Schedule a Demo</a>
+        <a href="#" class="cta-button secondary">Explore Features</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+{% endblock %}
