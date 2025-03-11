@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Nomination Application</title>
+    <link rel="stylesheet" href="nominate.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Student Nomination Application</h1>
+            <p class="subtitle">For students with academic excellence (above 70% marks)</p>
+        </header>
+
+        <form id="nominationForm" onsubmit="return validateForm()">
+            <div class="form-section">
+                <h2>Personal Information</h2>
+                
+                <div class="form-group">
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" id="fullName" name="fullName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentId">Student ID:</label>
+                    <input type="text" id="studentId" name="studentId" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="department">Department:</label>
+                    <select id="department" name="department" required>
+                        <option value="">Select Department</option>
+                        <option value="computer-science">Computer Science</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="business">Business</option>
+                        <option value="arts">Arts</option>
+                        <option value="science">Science</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Academic Information</h2>
+                
+                <div class="form-group">
+                    <label for="year">Current Year of Study:</label>
+                    <select id="year" name="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">First Year</option>
+                        <option value="2">Second Year</option>
+                        <option value="3">Third Year</option>
+                        <option value="4">Fourth Year</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="marks">Overall Percentage Marks:</label>
+                    <input type="number" id="marks" name="marks" min="0" max="100" step="0.01" required>
+                    <span class="hint">Must be above 70% to be eligible</span>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Nomination Details</h2>
+                
+                <div class="form-group">
+                    <label for="category">Nomination Category:</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="academic-excellence">Academic Excellence Award</option>
+                        <option value="leadership">Student Leadership Award</option>
+                        <option value="innovation">Innovation Award</option>
+                        <option value="community-service">Community Service Award</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="achievements">Key Achievements:</label>
+                    <textarea id="achievements" name="achievements" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="referenceTeacher">Reference Teacher:</label>
+                    <input type="text" id="referenceTeacher" name="referenceTeacher" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Declaration</h2>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="declaration" name="declaration" required>
+                    <label for="declaration">I confirm that all information provided is true and accurate. I understand that any false information may result in the rejection of my nomination.</label>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <div class="form-buttons">
+                <button type="reset" class="secondary-btn">Reset Form</button>
+                <button type="submit" class="primary-btn">Submit Application</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function validateForm() {
+            const marks = parseFloat(document.getElementById('marks').value);
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (marks < 70) {
+                errorMessage.textContent = "You must have at least 70% marks to be eligible for nomination.";
+                errorMessage.style.display = "block";
+                return false;
+            }
+            
+            errorMessage.style.display = "none";
+            alert("Your nomination application has been submitted successfully!");
+            return true;
+        }
+    </script>
+</body>
+</html>
