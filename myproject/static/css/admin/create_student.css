@@ -1,140 +1,78 @@
-/* Styles for Student Registration Form */
+/* Create Student Page Styles for eVoteHub */
+/* These styles complement the main design system */
 
-.breadcrumbs {
-    margin-bottom: 20px;
-    font-size: 0.9rem;
-    color: var(--light-text);
+.create-student-container {
+    padding: 20px 0;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.breadcrumbs a {
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
     color: var(--primary-color);
     text-decoration: none;
+    font-size: 0.9rem;
+    transition: var(--transition);
 }
 
-.breadcrumbs a:hover {
+.back-link i {
+    margin-right: 5px;
+}
+
+.back-link:hover {
+    color: var(--secondary-color);
     text-decoration: underline;
 }
 
+/* Form Container */
 .form-container {
     background-color: var(--background-color);
     border-radius: 8px;
     padding: 30px;
     box-shadow: var(--shadow);
-    margin-bottom: 30px;
 }
 
-.form-title {
+.form-header {
     margin-bottom: 25px;
+    text-align: center;
+}
+
+.form-header h3 {
     font-size: 1.4rem;
+    margin-bottom: 5px;
     color: var(--text-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
-.form-title a {
+.form-header p {
+    color: var(--light-text);
     font-size: 0.9rem;
-    color: var(--primary-color);
-    text-decoration: none;
 }
 
-.form-title a:hover {
-    text-decoration: underline;
-}
-
-.form-group {
+/* Alert Container */
+.alert-container {
     margin-bottom: 20px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.form-control {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid var(--border-color);
+.alert {
+    padding: 12px 15px;
     border-radius: 5px;
-    font-size: 1rem;
-    transition: var(--transition);
-}
-
-.form-control:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
-}
-
-.help-text {
-    display: block;
-    margin-top: 5px;
-    font-size: 0.8rem;
-    color: var(--light-text);
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
-.form-check {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
 }
 
-.form-check input {
+.alert i {
     margin-right: 10px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-}
-
-.generate-password {
-    display: inline-block;
-    padding: 10px 15px;
-    background-color: var(--light-bg);
-    color: var(--text-color);
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: 500;
-    transition: var(--transition);
-    border: none;
-    cursor: pointer;
-}
-
-.generate-password:hover {
-    background-color: var(--border-color);
-}
-
-.required-field::after {
-    content: "*";
-    color: var(--accent-color);
-    margin-left: 4px;
-}
-
-/* Form section headers */
-h4 {
-    margin: 25px 0 15px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
     font-size: 1.1rem;
-}
-
-/* Alert messages */
-.alert {
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    font-weight: 500;
 }
 
 .alert-success {
@@ -149,38 +87,210 @@ h4 {
     border: 1px solid rgba(231, 76, 60, 0.3);
 }
 
-/* Responsive styles */
+.alert-warning {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    background-color: var(--light-bg);
+}
+
+.form-section h4 {
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Form Layout */
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    flex-basis: 100%;
+}
+
+/* Form Elements */
+label {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+select[multiple] {
+    height: 100px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+}
+
+.form-hint {
+    font-size: 0.8rem;
+    color: var(--lightest-text);
+    margin-top: 5px;
+}
+
+.required {
+    color: var(--accent-color);
+}
+
+/* Password Field */
+.password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--light-text);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}
+
+/* Radio and Checkbox Styles */
+.radio-group {
+    display: flex;
+    gap: 15px;
+}
+
+.radio-label,
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.radio-label input,
+.checkbox-label input {
+    margin-right: 8px;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.cancel-button {
+    padding: 10px 20px;
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cancel-button:hover {
+    background-color: var(--border-color);
+}
+
+.cta-button {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.cta-button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-    
-    .form-actions {
         flex-direction: column;
         gap: 15px;
     }
     
-    .form-actions div {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+    .form-container {
+        padding: 20px;
     }
     
-    .cancel-button, .cta-button {
-        width: 100%;
-        text-align: center;
+    .form-section {
+        padding: 15px;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
 }
 
 @media (max-width: 576px) {
-    .form-container {
-        padding: 20px 15px;
+    .form-actions {
+        flex-direction: column;
     }
     
-    .form-title {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .form-actions button {
+        width: 100%;
+    }
+    
+    .cancel-button {
+        order: 2;
+    }
+    
+    .cta-button {
+        order: 1;
     }
 }

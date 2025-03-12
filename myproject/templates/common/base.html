@@ -26,12 +26,43 @@
                     <li><a href="{% url 'about' %}">About</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     {% if user.is_authenticated %}
-                        <li><a href="{% url 'student_dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {% if user.username == "admin" %}
+                            <!-- Admin-Specific Links -->
+                            <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                            <li><a href="{% url 'create_student' %}">Create Student</a></li>
+                            <!-- <li class="user-profile">
+                                <a href="#" class="profile-toggle">
+                                    <i class="fas fa-user-shield"></i> Admin
+                                    <i class="fas fa-caret-down"></i>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li> -->
+                                    <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                                </ul>
+                            </li>
+                        {% elif user.student %}
+                            <!-- Regular Student Links -->
+                            <li><a href="{% url 'student_dashboard' %}">Dashboard</a></li>
+                            <li class="user-profile">
+                                <a href="#" class="profile-toggle">
+                                    <i class="fas fa-user-graduate"></i> {{ user.student.first_name }}
+                                    <i class="fas fa-caret-down"></i>
+                                </a>
+                                <!-- <ul class="dropdown-menu"> -->
+                                    <!-- <li><a href="#"><i class="fas fa-user"></i> My Profile</a></li> -->
+                                    <!-- <li><a href="#"><i class="fas fa-vote-yea"></i> My Elections</a></li> -->
+                                    <!-- <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li> -->
+                                    <li><a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                                <!-- </ul> -->
+                            </li>
+                        {% else %}
+                            <!-- Unauthorized users -->
+                            <li><a href="{% url 'home' %}">Unauthorized Access</a></li>
+                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {% endif %}
                     {% else %}
-                        <li><a href="{% url 'login' %}">Login</a></li>
+                        <li><a href="{% url 'login' %}" class="login-button"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                     {% endif %}
-
                 </ul>
             </nav>
         </div>

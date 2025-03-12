@@ -11,7 +11,7 @@ urlpatterns = [
     # Admin routes
     path('admin/create-student/', views.create_student, name='create_student'),
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
-
+    
     # Student routes
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
 ]

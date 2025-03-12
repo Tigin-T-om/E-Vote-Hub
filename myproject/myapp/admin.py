@@ -13,16 +13,24 @@ class StudentAdminForm(forms.ModelForm):
         fields = ['username', 'password', 'roll_number', 'name', 'email', 'is_nominated', 'has_voted']
 
     def save(self, commit=True):
+        username = self.cleaned_data['username']
+        
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists! Choose another.")
+
         user = User.objects.create_user(
-            username=self.cleaned_data['username'],
+            username=username,
             password=self.cleaned_data['password'],
             email=self.cleaned_data['email']
         )
         student = super().save(commit=False)
-        student.user = user  # Link Student to User
+        student.user = user  
+        student.name = self.cleaned_data['name']
+        
         if commit:
             student.save()
         return student
+
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm

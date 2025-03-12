@@ -19,10 +19,9 @@ def login_view(request):
         if user is not None:
             login(request, user)
             
-            # If username is "admin", redirect to admin dashboard
-            if username == "admin":
+            # Redirect based on user role
+            if user.is_superuser:  # Redirect all superusers to admin dashboard
                 return redirect('admin_dashboard')
-            # Otherwise, redirect based on user role
             elif hasattr(user, 'student'):
                 return redirect('student_dashboard')
             else:
@@ -30,7 +29,7 @@ def login_view(request):
                 return redirect('home_view')
         else:
             messages.error(request, "Invalid username or password")
-            
+
     return render(request, 'common/login.html')
 
 @login_required
@@ -56,14 +55,14 @@ def create_student(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Student account created successfully!")
-            return redirect('admin_dashboard')  # Redirect after success
+            return redirect('admin_dashboard')
         else:
             messages.error(request, "Error creating student. Please check the form.")
 
     else:
         form = StudentCreationForm()
 
-    return render(request, 'admin_custom/create_student.html', {'form': form})  # Renamed folder to avoid conflicts
+    return render(request, 'admin/create_student.html', {'form': form})
 
 @login_required
 def student_dashboard(request):

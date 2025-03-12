@@ -1,178 +1,193 @@
 {% extends 'common/base.html' %}
 {% load static %}
 
-{% block title %}Create Student | eVoteHub{% endblock %}
+{% block title %}Create Student Account | eVoteHub{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/styles.css' %}">
 <link rel="stylesheet" href="{% static 'css/admin/create_student.css' %}">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="admin-dashboard">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <h2>Student Registration</h2>
+<div class="create-student-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2>Create Student Account</h2>
         <div class="header-actions">
-            <div class="search-container">
-                <input type="text" placeholder="Search students...">
-                <button type="submit"><i class="fas fa-search"></i></button>
-            </div>
-            <div class="admin-profile">
-                <span>Welcome, {{ user.username }}</span>
-                <!-- <img src="{% static 'images/admin-avatar.png' %}" alt="Admin Avatar" onerror="this.src='https://via.placeholder.com/40'"> -->
-            </div>
+            <a href="#" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 
-    <!-- Breadcrumbs -->
-    <div class="breadcrumbs">
-        <a href="{% url 'admin:dashboard' %}">Dashboard</a> &gt;
-        <a href="{% url 'admin:users' %}">User Management</a> &gt;
-        <span>Create Student</span>
-    </div>
-
-    <!-- Create Student Form -->
+    <!-- Form Container -->
     <div class="form-container">
-        <div class="form-title">
-            <h3>New Student Registration</h3>
-            <a href="{% url 'admin:bulk_import_students' %}"><i class="fas fa-file-import"></i> Bulk Import</a>
+        <div class="form-header">
+            <h3>Student Registration Form</h3>
+            <p>Create a new student account by filling out the form below</p>
         </div>
 
-        <form method="POST" action="{% url 'admin:create_student' %}">
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="#" class="student-form">
             {% csrf_token %}
             
-            {% if messages %}
-            <div class="alert alert-{% if 'success' in messages.tags %}success{% else %}error{% endif %}">
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            </div>
-            {% endif %}
+            <div class="form-section">
+                <h4>Personal Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">First Name <span class="required">*</span></label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name <span class="required">*</span></label>
+                        <input type="text" id="last_name" name="last_name" required>
+                    </div>
+                </div>
 
-            <!-- Personal Information -->
-            <h4>Personal Information</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required-field" for="first_name">First Name</label>
-                    <input type="text" name="first_name" id="first_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="required-field" for="last_name">Last Name</label>
-                    <input type="text" name="last_name" id="last_name" class="form-control" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required-field" for="email">Email Address</label>
-                    <input type="email" name="email" id="email" class="form-control" required>
-                    <span class="help-text">This will be used as their username for login</span>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" name="phone" id="phone" class="form-control">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="student@college.edu" required>
+                        <span class="form-hint">Must use college email domain</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="student_id">Student ID <span class="required">*</span></label>
+                        <input type="text" id="student_id" name="student_id" required>
+                    </div>
                 </div>
             </div>
 
-            <!-- Academic Information -->
-            <h4>Academic Information</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required-field" for="student_id">Student ID</label>
-                    <input type="text" name="student_id" id="student_id" class="form-control" required>
-                    <span class="help-text">Unique identifier for the student</span>
+            <div class="form-section">
+                <h4>Academic Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="year">Year of Study <span class="required">*</span></label>
+                        <select id="year" name="year_of_study" required>
+                            <option value="">Select Year</option>
+                            <option value="1">First Year</option>
+                            <option value="2">Second Year</option>
+                            <option value="3">Third Year</option>
+                            <option value="4">Fourth Year</option>
+                            <option value="5">Fifth Year</option>
+                            <option value="6">Graduate</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="required-field" for="department">Department</label>
-                    <select name="department" id="department" class="form-control" required>
-                        <option value="">Select Department</option>
-                        {% for department in departments %}
-                            <option value="{{ department.id }}">{{ department.name }}</option>
-                        {% endfor %}
-                    </select>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="enrollment_date">Enrollment Date <span class="required">*</span></label>
+                        <input type="date" id="enrollment_date" name="enrollment_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="graduation_date">Expected Graduation Date</label>
+                        <input type="date" id="graduation_date" name="graduation_date">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="eligible_elections">Eligible for Elections</label>
+                        <select id="eligible_elections" name="eligible_elections" multiple>
+                            {% for election in available_elections %}
+                                <option value="{{ election.id }}">{{ election.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="form-hint">Hold Ctrl/Cmd to select multiple elections</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required-field" for="program">Program/Major</label>
-                    <select name="program" id="program" class="form-control" required>
-                        <option value="">Select Program</option>
-                        {% for program in programs %}
-                            <option value="{{ program.id }}">{{ program.name }}</option>
-                        {% endfor %}
-                    </select>
+            <div class="form-section">
+                <h4>Account Settings</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" required>
+                        <span class="form-hint">Will be used for login</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Temporary Password <span class="required">*</span></label>
+                        <div class="password-field">
+                            <input type="password" id="password" name="password" required>
+                            <button type="button" class="toggle-password" tabindex="-1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span class="form-hint">Student will be prompted to change on first login</span>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="required-field" for="year_level">Year Level</label>
-                    <select name="year_level" id="year_level" class="form-control" required>
-                        <option value="">Select Year Level</option>
-                        <option value="1">First Year</option>
-                        <option value="2">Second Year</option>
-                        <option value="3">Third Year</option>
-                        <option value="4">Fourth Year</option>
-                        <option value="5">Fifth Year</option>
-                        <option value="6">Graduate Student</option>
-                    </select>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Account Status</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="status" value="active" checked>
+                                <span>Active</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="status" value="inactive">
+                                <span>Inactive</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiry_date">Account Expiry Date</label>
+                        <input type="date" id="expiry_date" name="expiry_date">
+                        <span class="form-hint">Leave blank for no expiration</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Account Settings -->
-            <h4>Account Settings</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="required-field" for="password">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
+            <div class="form-section">
+                <h4>Additional Options</h4>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="send_credentials" value="1" checked>
+                            <span>Send login credentials to student's email</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="required-field" for="confirm_password">Confirm Password</label>
-                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="force_password_change" value="1" checked>
+                            <span>Force password change on first login</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <div class="form-check">
-                    <input type="checkbox" name="send_welcome_email" id="send_welcome_email" checked>
-                    <label for="send_welcome_email">Send welcome email with login credentials</label>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3"></textarea>
+                    </div>
                 </div>
-                <div class="form-check">
-                    <input type="checkbox" name="require_password_reset" id="require_password_reset" checked>
-                    <label for="require_password_reset">Require password reset on first login</label>
-                </div>
-            </div>
-
-            <!-- Permissions -->
-            <h4>Permissions</h4>
-            <div class="form-group">
-                <div class="form-check">
-                    <input type="checkbox" name="is_active" id="is_active" checked>
-                    <label for="is_active">Active account</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" name="can_vote" id="can_vote" checked>
-                    <label for="can_vote">Can participate in elections</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" name="can_nominate" id="can_nominate" checked>
-                    <label for="can_nominate">Can nominate candidates</label>
-                </div>
-            </div>
-
-            <!-- Additional Notes -->
-            <div class="form-group">
-                <label for="notes">Additional Notes</label>
-                <textarea name="notes" id="notes" class="form-control" rows="3"></textarea>
             </div>
 
             <div class="form-actions">
-                <button type="button" class="generate-password" id="generatePasswordBtn">
-                    <i class="fas fa-key"></i> Generate Password
-                </button>
-                <div>
-                    <a href="{% url 'admin:users' %}" class="cancel-button">Cancel</a>
-                    <button type="submit" class="cta-button">Create Student</button>
-                </div>
+                <button type="button" class="cancel-button">Cancel</button>
+                <button type="submit" class="cta-button">Create Student Account</button>
             </div>
         </form>
     </div>
@@ -182,49 +197,50 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Generate random password
-        document.getElementById('generatePasswordBtn').addEventListener('click', function() {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            let password = '';
-            for (let i = 0; i < 12; i++) {
-                password += characters.charAt(Math.floor(Math.random() * characters.length));
-            }
-            document.getElementById('password').value = password;
-            document.getElementById('confirm_password').value = password;
+        // Toggle password visibility
+        const togglePassword = document.querySelector('.toggle-password');
+        const passwordInput = document.querySelector('#password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
             
-            // Optional: Show a temporary notification that password was generated
-            alert('Password generated: ' + password);
+            // Toggle eye icon
+            const eyeIcon = this.querySelector('i');
+            eyeIcon.classList.toggle('fa-eye');
+            eyeIcon.classList.toggle('fa-eye-slash');
         });
 
-        // Department-Program dependency (assuming AJAX would be used in a real implementation)
-        document.getElementById('department').addEventListener('change', function() {
-            const departmentId = this.value;
-            const programSelect = document.getElementById('program');
-            
-            if (departmentId) {
-                // In a real implementation, you would fetch programs based on the selected department
-                // For now, we'll just simulate this behavior with a message
-                programSelect.innerHTML = '<option value="">Loading programs...</option>';
-                
-                // This would be replaced with an actual AJAX call in a real application
-                setTimeout(function() {
-                    programSelect.innerHTML = '<option value="">Select Program</option>' +
-                                             '<option value="1">Sample Program 1</option>' +
-                                             '<option value="2">Sample Program 2</option>';
-                }, 500);
-            } else {
-                programSelect.innerHTML = '<option value="">Select Program</option>';
+        // Cancel button functionality
+        const cancelButton = document.querySelector('.cancel-button');
+        cancelButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                window.location.href = "{% url 'admin:dashboard' %}";
+            }
+        });
+
+        // Auto-generate username when email is entered
+        const emailInput = document.querySelector('#email');
+        const usernameInput = document.querySelector('#username');
+        
+        emailInput.addEventListener('blur', function() {
+            if (emailInput.value && !usernameInput.value) {
+                const emailParts = emailInput.value.split('@');
+                if (emailParts.length > 0) {
+                    usernameInput.value = emailParts[0];
+                }
             }
         });
 
         // Form validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            
-            if (password !== confirmPassword) {
+        const studentForm = document.querySelector('.student-form');
+        studentForm.addEventListener('submit', function(e) {
+            const email = emailInput.value;
+            if (!email.includes('@') || !email.includes('.edu')) {
                 e.preventDefault();
-                alert('Passwords do not match');
+                alert('Please enter a valid college email address (must include .edu domain)');
+                emailInput.focus();
             }
         });
     });

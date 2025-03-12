@@ -17,7 +17,8 @@ class StudentCreationForm(forms.ModelForm):
             email=self.cleaned_data['email']
         )
         student = super().save(commit=False)
-        student.user = user  # Link Student to User
+        student.user = user  
+        student.name = self.cleaned_data['name']  # Ensure student name is saved
         if commit:
             student.save()
         return student
