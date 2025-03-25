@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from .models import Student, Department, HOD, ClassLeaderNomination, Officer
+from .models import Student, Department, HOD, ClassLeaderNomination, Officer, VotingSession, Candidate, Vote
 from django.utils import timezone
 from django.db.models import Q
 
@@ -141,6 +141,7 @@ def student_management(request):
         department_id = request.POST.get('department')
         username = request.POST.get('username')
         password = request.POST.get('password')
+        gender = request.POST.get('gender')
         
         try:
             # Create User with username and password
@@ -157,7 +158,8 @@ def student_management(request):
             Student.objects.create(
                 user=user,
                 student_id=student_id,
-                department=department
+                department=department,
+                gender=gender
             )
             
             messages.success(request, f'Student account created successfully! Username: {username}')
@@ -649,3 +651,177 @@ def officer_finalize_nomination(request, nomination_id):
             messages.error(request, f'Error finalizing nomination: {str(e)}')
     
     return redirect('officer_nominations')
+
+@login_required
+def officer_voting_management(request):
+    try:
+        officer = request.user.officer
+    except Officer.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as an Officer.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'create_session':
+            try:
+                department_id = request.POST.get('department')
+                start_date = request.POST.get('start_date')
+                end_date = request.POST.get('end_date')
+                
+                # Create voting session with active status
+                session = VotingSession.objects.create(
+                    department_id=department_id,
+                    start_date=start_date,
+                    end_date=end_date,
+                    created_by=officer,
+                    status='active'  # Set status to active when creating
+                )
+                
+                # Add finalized candidates to the session
+                finalized_nominations = ClassLeaderNomination.objects.filter(
+                    department_id=department_id,
+                    status='finalized'
+                )
+                
+                for nomination in finalized_nominations:
+                    # Determine gender based on student data
+                    student_gender = nomination.student.gender
+                    gender = 'male' if student_gender == 'M' else 'female'
+                    
+                    Candidate.objects.create(
+                        nomination=nomination,
+                        voting_session=session,
+                        gender=gender
+                    )
+                
+                messages.success(request, 'Voting session created successfully!')
+                
+            except Exception as e:
+                messages.error(request, f'Error creating voting session: {str(e)}')
+        
+        elif action == 'verify_results':
+            try:
+                session = VotingSession.objects.get(id=request.POST.get('session_id'))
+                session.results_verified = True
+                session.save()
+                messages.success(request, 'Results verified successfully!')
+            except Exception as e:
+                messages.error(request, f'Error verifying results: {str(e)}')
+        
+        elif action == 'publish_results':
+            try:
+                session = VotingSession.objects.get(id=request.POST.get('session_id'))
+                session.status = 'published'
+                session.save()
+                messages.success(request, 'Results published successfully!')
+            except Exception as e:
+                messages.error(request, f'Error publishing results: {str(e)}')
+        
+        elif action == 'remove_session':
+            try:
+                session_id = request.POST.get('session_id')
+                session = VotingSession.objects.get(id=session_id)
+                
+                if session.can_be_removed():
+                    session.status = 'cancelled'
+                    session.save()
+                    messages.success(request, 'Voting session has been removed successfully.')
+                else:
+                    messages.error(request, 'This session cannot be removed.')
+                    
+            except VotingSession.DoesNotExist:
+                messages.error(request, 'Voting session not found.')
+            except Exception as e:
+                messages.error(request, f'Error removing session: {str(e)}')
+
+    # Get active and completed sessions
+    active_sessions = VotingSession.objects.filter(status='active')
+    completed_sessions = VotingSession.objects.filter(
+        status__in=['completed', 'published']
+    ).order_by('-end_date')
+    
+    # Get departments for dropdown
+    departments = Department.objects.all()
+
+    context = {
+        'active_sessions': active_sessions,
+        'completed_sessions': completed_sessions,
+        'departments': departments,
+    }
+    return render(request, 'officer/voting_management.html', context)
+
+@login_required
+def student_voting(request):
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a student.')
+        return redirect('home')
+    
+    # Debug information
+    current_time = timezone.now()
+    
+    # Get active voting session for student's department with debug checks
+    active_session = VotingSession.objects.filter(
+        department=student.department,
+        status='active'
+    ).first()
+    
+    if active_session:
+        # Check time constraints
+        if current_time < active_session.start_date:
+            messages.info(request, 'Voting session exists but has not started yet.')
+        elif current_time > active_session.end_date:
+            messages.info(request, 'Voting session has ended.')
+        else:
+            messages.success(request, 'Voting session is currently active.')
+    else:
+        # Debug information about why no session was found
+        all_sessions = VotingSession.objects.all()
+        if all_sessions.exists():
+            for session in all_sessions:
+                if session.department != student.department:
+                    messages.info(request, f'Found session for department: {session.department.name}')
+                if session.status != 'active':
+                    messages.info(request, f'Found session with status: {session.status}')
+        else:
+            messages.info(request, 'No voting sessions exist in the database.')
+
+    # Check if student has already voted
+    has_voted = False
+    if active_session:
+        has_voted = Vote.objects.filter(
+            student=student,
+            voting_session=active_session
+        ).exists()
+    
+    # Get candidates for active session
+    male_candidates = []
+    female_candidates = []
+    if active_session:
+        male_candidates = Candidate.objects.filter(
+            voting_session=active_session,
+            gender='male'
+        ).select_related('nomination__student__user')
+        female_candidates = Candidate.objects.filter(
+            voting_session=active_session,
+            gender='female'
+        ).select_related('nomination__student__user')
+    
+    # Get published results
+    published_results = VotingSession.objects.filter(
+        department=student.department,
+        status='published'
+    ).order_by('-end_date')
+    
+    context = {
+        'active_session': active_session,
+        'has_voted': has_voted,
+        'male_candidates': male_candidates,
+        'female_candidates': female_candidates,
+        'published_results': published_results,
+        'student_department': student.department.name,  # Added for debugging
+        'current_time': current_time,  # Added for debugging
+    }
+    return render(request, 'students/voting.html', context)

@@ -26,4 +26,6 @@ urlpatterns = [
     path('officer/nominations/', views.officer_nominations, name='officer_nominations'),
     path('officer/nominations/<int:nomination_id>/review/', views.officer_review_nomination, name='officer_review_nomination'),
     path('officer/nominations/<int:nomination_id>/finalize/', views.officer_finalize_nomination, name='officer_finalize_nomination'),
+    path('officer/voting/', views.officer_voting_management, name='officer_voting_management'),
+    path('student/voting/', views.student_voting, name='student_voting'),
 ]

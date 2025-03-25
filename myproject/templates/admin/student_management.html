@@ -24,6 +24,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Department</th>
+                            <th>Gender</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
@@ -36,6 +37,7 @@
                             <td>{{ student.user.get_full_name }}</td>
                             <td>{{ student.user.email }}</td>
                             <td>{{ student.department.name }}</td>
+                            <td>{{ student.get_gender_display }}</td>
                             <td>{{ student.created_at|date:"M d, Y" }}</td>
                             <td>
                                 <button class="btn btn-sm btn-info" title="View Details">
@@ -101,6 +103,14 @@
                             {% for dept in departments %}
                             <option value="{{ dept.id }}">{{ dept.name }}</option>
                             {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
                         </select>
                     </div>
                     <div class="mb-3">
