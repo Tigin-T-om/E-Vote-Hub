@@ -6,6 +6,16 @@ from django.contrib.auth.models import User
 from .models import Student, Department, HOD, ClassLeaderNomination, Officer, VotingSession, Candidate, Vote
 from django.utils import timezone
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+import logging
+from django.conf import settings
+import random
+import string
+from django.http import JsonResponse
+# Set up logging
+logger = logging.getLogger(__name__)
 
 def home(request):
     return render(request, 'home.html')
@@ -127,6 +137,7 @@ def admin_dashboard(request):
     }
     return render(request, 'admin/index.html', context)
 
+
 @login_required
 @user_passes_test(is_admin)
 def student_management(request):
@@ -140,34 +151,63 @@ def student_management(request):
         student_id = request.POST.get('student_id')
         department_id = request.POST.get('department')
         username = request.POST.get('username')
-        password = request.POST.get('password')
         gender = request.POST.get('gender')
-        
+
+        # Generate a secure random password
+        temp_password = ''.join(random.choices(string.ascii_letters + string.digits + string.punctuation, k=12))
+
         try:
-            # Create User with username and password
+            # Create User
             user = User.objects.create_user(
                 username=username,
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
-                password=password
+                password=temp_password  # Set the temporary password
             )
             
+            # Get department
+            department = get_object_or_404(Department, id=department_id)
+
             # Create Student
-            department = Department.objects.get(id=department_id)
-            Student.objects.create(
+            student = Student.objects.create(
                 user=user,
                 student_id=student_id,
                 department=department,
                 gender=gender
             )
-            
+
+            # Send welcome email with credentials
+            try:
+                subject = 'Welcome to EVoteHub - Your Account Details'
+                html_message = render_to_string('emails/welcome_email.html', {
+                    'student': student,
+                    'username': username,
+                    'password': temp_password,  # Temporary password
+                    'department': department.name
+                })
+                plain_message = strip_tags(html_message)
+
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,  # Ensure this is set in settings.py
+                    recipient_list=[email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+
+                logger.info(f"Welcome email sent successfully to {email}")
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {email}: {str(e)}")
+                messages.warning(request, f'Student account created, but email sending failed: {str(e)}')
+
             messages.success(request, f'Student account created successfully! Username: {username}')
         except Exception as e:
             messages.error(request, f'Error creating student account: {str(e)}')
-        
+
         return redirect('student_management')
-    
+
     context = {
         'students': students,
         'departments': departments
@@ -825,3 +865,94 @@ def student_voting(request):
         'current_time': current_time,  # Added for debugging
     }
     return render(request, 'students/voting.html', context)
+
+@login_required
+def student_profile(request):
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        messages.error(request, 'Student profile not found.')
+        return redirect('student_home')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'change_password':
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            # Verify current password
+            if not request.user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match.')
+            else:
+                # Change password
+                request.user.set_password(new_password)
+                request.user.save()
+                messages.success(request, 'Password changed successfully!')
+                return redirect('student_profile')
+        
+        elif 'profile_picture' in request.FILES:
+            try:
+                # Delete old profile picture if it exists
+                if student.profile_picture:
+                    student.profile_picture.delete()
+                
+                # Save new profile picture
+                student.profile_picture = request.FILES['profile_picture']
+                student.save()
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'image_url': student.profile_picture.url
+                    })
+                else:
+                    messages.success(request, 'Profile picture updated successfully!')
+            except Exception as e:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'error': str(e)
+                    })
+                else:
+                    messages.error(request, f'Error updating profile picture: {str(e)}')
+        
+        elif request.headers.get('X-Requested-With') == 'XMLHttpRequest' and action == 'remove_profile_picture':
+            try:
+                if student.profile_picture:
+                    student.profile_picture.delete()
+                    student.profile_picture = None
+                    student.save()
+                return JsonResponse({'success': True})
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
+        
+        else:
+            # Update profile details
+            try:
+                # Update user details
+                request.user.first_name = request.POST.get('first_name')
+                request.user.last_name = request.POST.get('last_name')
+                request.user.email = request.POST.get('email')
+                request.user.save()
+                
+                # Update student details
+                student.gender = request.POST.get('gender')
+                student.save()
+                
+                messages.success(request, 'Profile updated successfully!')
+            except Exception as e:
+                messages.error(request, f'Error updating profile: {str(e)}')
+        
+        return redirect('student_profile')
+
+    context = {
+        'student': student
+    }
+    return render(request, 'students/profile.html', context)

@@ -1,0 +1,300 @@
+{% extends 'students/base_student.html' %}
+
+{% block title %}My Profile - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Profile Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="profile-picture-container mb-4">
+                        <div class="profile-picture-wrapper">
+                            {% if student.profile_picture %}
+                                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="rounded-circle profile-picture" id="profileImage">
+                            {% else %}
+                                <div class="default-profile-picture rounded-circle" id="defaultProfile">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div class="profile-picture-overlay">
+                                <form method="POST" enctype="multipart/form-data" class="profile-picture-form" id="profilePictureForm">
+                                    {% csrf_token %}
+                                    <input type="file" name="profile_picture" id="profilePictureInput" class="d-none" accept="image/*">
+                                    <button type="button" class="btn btn-light btn-sm" onclick="document.getElementById('profilePictureInput').click()">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                    {% if student.profile_picture %}
+                                        <button type="button" class="btn btn-light btn-sm" onclick="removeProfilePicture()">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <h4 class="card-title mb-2">{{ student.user.get_full_name }}</h4>
+                    <p class="text-muted mb-1">{{ student.student_id }}</p>
+                    <p class="text-muted">{{ student.department.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Profile Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="profileForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ student.user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ student.user.last_name }}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ student.user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Change Password Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="passwordForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="change_password">
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-picture-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+    
+    .profile-picture-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .profile-picture {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+    }
+    
+    .default-profile-picture {
+        width: 120px;
+        height: 120px;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6c757d;
+    }
+
+    .profile-picture-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .profile-picture-wrapper:hover .profile-picture-overlay {
+        opacity: 1;
+    }
+
+    .profile-picture-overlay .btn {
+        padding: 5px 10px;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .text-muted {
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .profile-picture-container {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .profile-picture,
+        .default-profile-picture {
+            width: 100px;
+            height: 100px;
+        }
+
+        .default-profile-picture {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle profile picture upload
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    const profilePictureForm = document.getElementById('profilePictureForm');
+    const profileImage = document.getElementById('profileImage');
+    const defaultProfile = document.getElementById('defaultProfile');
+    
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const formData = new FormData(profilePictureForm);
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the profile picture immediately
+                        if (profileImage) {
+                            profileImage.src = data.image_url + '?t=' + new Date().getTime();
+                        } else {
+                            // Create new image element if it doesn't exist
+                            const newImage = document.createElement('img');
+                            newImage.src = data.image_url + '?t=' + new Date().getTime();
+                            newImage.alt = 'Profile Picture';
+                            newImage.className = 'rounded-circle profile-picture';
+                            newImage.id = 'profileImage';
+                            defaultProfile.replaceWith(newImage);
+                        }
+                    } else {
+                        alert('Error uploading image: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error uploading image. Please try again.');
+                });
+            }
+        });
+    }
+
+    // Handle password form submission
+    const passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('New passwords do not match!');
+            }
+        });
+    }
+});
+
+function removeProfilePicture() {
+    if (confirm('Are you sure you want to remove your profile picture?')) {
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                action: 'remove_profile_picture'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Replace image with default profile picture
+                const profileImage = document.getElementById('profileImage');
+                if (profileImage) {
+                    const defaultProfile = document.createElement('div');
+                    defaultProfile.className = 'default-profile-picture rounded-circle';
+                    defaultProfile.id = 'defaultProfile';
+                    defaultProfile.innerHTML = '<i class="fas fa-user"></i>';
+                    profileImage.replaceWith(defaultProfile);
+                }
+            } else {
+                alert('Error removing profile picture: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing profile picture. Please try again.');
+        });
+    }
+}
+</script>
+{% endblock %} 
