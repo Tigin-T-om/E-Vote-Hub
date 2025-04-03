@@ -130,10 +130,12 @@
             </a>
             <div class="user-info">
                 {% if request.user.student.profile_picture %}
-                    <img src="{{ request.user.student.profile_picture.url }}" alt="Profile" class="mb-2">
+                    <img src="{{ request.user.student.profile_picture.url }}" alt="Profile" class="mb-2 rounded-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 {% else %}
-                    <div class="default-profile-picture mx-auto mb-2">
-                        <i class="fas fa-user"></i>
+                    <div class="default-profile-picture mx-auto mb-2" style="width: 40px; height: 40px; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; color: #6c757d; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <svg viewBox="0 0 24 24" width="60%" height="60%" fill="currentColor" style="opacity: 0.7;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
                     </div>
                 {% endif %}
                 <div class="user-name">{{ request.user.get_full_name }}</div>
@@ -148,6 +150,9 @@
             </a>
             <a href="{% url 'student_nomination' %}" class="nav-link {% if request.resolver_match.url_name == 'student_nomination' %}active{% endif %}">
                 <i class="fas fa-user-plus"></i>Submit Nomination
+            </a>
+            <a href="{% url 'student_voting_results' %}" class="nav-link {% if request.resolver_match.url_name == 'student_voting_results' %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>Voting Results
             </a>
             <a href="{% url 'student_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
                 <i class="fas fa-user"></i>My Profile

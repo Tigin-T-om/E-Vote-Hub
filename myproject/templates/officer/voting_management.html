@@ -5,17 +5,98 @@
 {% block content %}
 <div class="container-fluid">
     <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Voting Management</h2>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createVotingModal">
-            <i class="fas fa-plus"></i> Create New Voting Session
-        </button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Voting Session Management</h2>
+            <p class="text-muted">Create and manage voting sessions for class leader elections</p>
+        </div>
     </div>
 
-    <!-- Active Voting Sessions -->
+    <!-- Create Session Form -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="card-title mb-0">Active Voting Sessions</h5>
+            <h5 class="card-title mb-0">Create New Voting Session</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_session">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="start_date" class="form-label">Start Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="end_date" class="form-label">End Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Session</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scheduled Sessions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Scheduled Sessions</h5>
+        </div>
+        <div class="card-body">
+            {% if scheduled_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Male Candidates</th>
+                            <th>Female Candidates</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session_data in scheduled_sessions %}
+                        <tr>
+                            <td>{{ session_data.session.department.name }}</td>
+                            <td>{{ session_data.session.start_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session_data.session.end_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session_data.male_count }}</td>
+                            <td>{{ session_data.female_count }}</td>
+                            <td>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="cancel_session">
+                                    <input type="hidden" name="session_id" value="{{ session_data.session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this session? This action cannot be undone.')">
+                                        Cancel
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No scheduled sessions.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Active Sessions</h5>
         </div>
         <div class="card-body">
             {% if active_sessions %}
@@ -27,7 +108,6 @@
                             <th>Start Date</th>
                             <th>End Date</th>
                             <th>Total Votes</th>
-                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -39,57 +119,22 @@
                             <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
                             <td>{{ session.vote_set.count }}</td>
                             <td>
-                                <span class="badge {% if session.is_active %}bg-success{% else %}bg-warning{% endif %}">
-                                    {% if session.is_active %}Active{% else %}Scheduled{% endif %}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" 
-                                        data-bs-target="#viewSessionModal{{ session.id }}">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                {% if session.can_be_removed %}
-                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" 
-                                        data-bs-target="#removeSessionModal{{ session.id }}">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                                {% endif %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="cancel_session">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this session? This action cannot be undone.')">
+                                        Cancel
+                                    </button>
+                                </form>
                             </td>
                         </tr>
-
-                        <!-- Remove Session Modal -->
-                        <div class="modal fade" id="removeSessionModal{{ session.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Remove Voting Session</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="session_id" value="{{ session.id }}">
-                                        <div class="modal-body">
-                                            <p>Are you sure you want to remove this voting session?</p>
-                                            <div class="alert alert-warning">
-                                                <i class="fas fa-exclamation-triangle"></i> This action cannot be undone.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-danger" name="action" value="remove_session">
-                                                Remove Session
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="text-muted mb-0">No active voting sessions.</p>
+            <p class="text-muted mb-0">No active sessions.</p>
             {% endif %}
         </div>
     </div>
@@ -106,6 +151,7 @@
                     <thead>
                         <tr>
                             <th>Department</th>
+                            <th>Start Date</th>
                             <th>End Date</th>
                             <th>Total Votes</th>
                             <th>Status</th>
@@ -116,24 +162,34 @@
                         {% for session in completed_sessions %}
                         <tr>
                             <td>{{ session.department.name }}</td>
+                            <td>{{ session.start_date|date:"M d, Y H:i" }}</td>
                             <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
                             <td>{{ session.vote_set.count }}</td>
+                            <td><span class="badge bg-{{ session.status|lower }}">{{ session.status }}</span></td>
                             <td>
-                                <span class="badge {% if session.status == 'completed' %}bg-warning{% else %}bg-success{% endif %}">
-                                    {{ session.status|title }}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
-                                        data-bs-target="#verifyResultsModal{{ session.id }}">
-                                    <i class="fas fa-check-double"></i> Verify Results
-                                </button>
-                                {% if session.results_verified %}
-                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" 
-                                        data-bs-target="#publishResultsModal{{ session.id }}">
-                                    <i class="fas fa-share"></i> Publish
-                                </button>
+                                {% if session.status == 'completed' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="verify_results">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">Verify</button>
+                                </form>
+                                {% elif session.status == 'verified' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="publish_results">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-primary">Publish</button>
+                                </form>
                                 {% endif %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_session">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this session? This action cannot be undone.')">
+                                        Delete
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -141,94 +197,18 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-muted mb-0">No completed voting sessions.</p>
+            <p class="text-muted mb-0">No completed sessions.</p>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Create Voting Session Modal -->
-<div class="modal fade" id="createVotingModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create Voting Session</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <select class="form-select" name="department" required>
-                            {% for dept in departments %}
-                            <option value="{{ dept.id }}">{{ dept.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Start Date & Time</label>
-                        <input type="datetime-local" class="form-control" name="start_date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">End Date & Time</label>
-                        <input type="datetime-local" class="form-control" name="end_date" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" name="action" value="create_session">
-                        Create Session
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Results Verification Modal -->
-<div class="modal fade" id="verifyResultsModal{{ session.id }}" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Verify Voting Results</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Male Representative</h6>
-                        <div class="card">
-                            <div class="card-body">
-                                <h5>{{ male_winner.nomination.student.user.get_full_name }}</h5>
-                                <p class="mb-1">Votes: {{ male_winner.vote_count }}</p>
-                                <p class="mb-0">Percentage: {{ male_winner_percentage }}%</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Female Representative</h6>
-                        <div class="card">
-                            <div class="card-body">
-                                <h5>{{ female_winner.nomination.student.user.get_full_name }}</h5>
-                                <p class="mb-1">Votes: {{ female_winner.vote_count }}</p>
-                                <p class="mb-0">Percentage: {{ female_winner_percentage }}%</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="session_id" value="{{ session.id }}">
-                    <button type="submit" class="btn btn-success" name="action" value="verify_results">
-                        Verify Results
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.bg-scheduled { background-color: #ffc107; }
+.bg-active { background-color: #28a745; }
+.bg-completed { background-color: #6c757d; }
+.bg-verified { background-color: #17a2b8; }
+.bg-published { background-color: #007bff; }
+.bg-cancelled { background-color: #dc3545; }
+</style>
 {% endblock %}

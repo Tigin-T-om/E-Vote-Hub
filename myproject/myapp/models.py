@@ -21,7 +21,7 @@ class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id = models.CharField(max_length=20, unique=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')  # Set default to 'M'
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
     profile_picture = models.ImageField(upload_to='static/images/profiles/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -83,6 +83,7 @@ class VotingSession(models.Model):
         ('scheduled', 'Scheduled'),
         ('active', 'Active'),
         ('completed', 'Completed'),
+        ('verified', 'Verified'),
         ('published', 'Published'),
         ('cancelled', 'Cancelled')
     ]
@@ -93,18 +94,59 @@ class VotingSession(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     created_by = models.ForeignKey(Officer, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    results_verified = models.BooleanField(default=False)
-    
-    def is_active(self):
-        now = timezone.now()
-        return self.start_date <= now <= self.end_date and self.status == 'active'
-
-    def can_be_removed(self):
-        return self.status in ['scheduled', 'active']
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Voting Session for {self.department.name} ({self.start_date} - {self.end_date})"
+        return f"{self.department.name} - {self.get_status_display()}"
 
+    def update_status_based_on_time(self):
+        now = timezone.now()
+        
+        # Don't update if status is already completed, verified, published, or cancelled
+        if self.status in ['completed', 'verified', 'published', 'cancelled']:
+            return
+        
+        # If current time is past end_date, mark as completed
+        if now > self.end_date:
+            self.status = 'completed'
+            self.save()
+            return
+        
+        # If current time is between start_date and end_date, mark as active
+        if self.start_date <= now <= self.end_date:
+            if self.status != 'active':
+                self.status = 'active'
+                self.save()
+            return
+        
+        # If current time is before start_date, keep as scheduled
+        if now < self.start_date:
+            if self.status != 'scheduled':
+                self.status = 'scheduled'
+                self.save()
+            return
+
+    def get_current_status(self):
+        """Get the current status based on time without saving changes"""
+        now = timezone.now()
+        
+        # Don't change if status is already completed, verified, published, or cancelled
+        if self.status in ['completed', 'verified', 'published', 'cancelled']:
+            return self.status
+        
+        # If current time is past end_date, should be completed
+        if now > self.end_date:
+            return 'completed'
+        
+        # If current time is between start_date and end_date, should be active
+        if self.start_date <= now <= self.end_date:
+            return 'active'
+        
+        # If current time is before start_date, should be scheduled
+        if now < self.start_date:
+            return 'scheduled'
+        
+        return self.status
 
 class Candidate(models.Model):
     nomination = models.OneToOneField(ClassLeaderNomination, on_delete=models.CASCADE)

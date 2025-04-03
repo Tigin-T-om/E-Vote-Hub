@@ -1,45 +1,53 @@
 {% extends 'officer/base_officer.html' %}
 
-{% block title %}Manage Nominations - EVoteHub{% endblock %}
+{% block title %}Nominations - EVoteHub{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header Section -->
+    <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Approved Nominations</h2>
-        <div class="text-muted">
-            Total: {{ nominations|length }}
-        </div>
+        <h1 class="h3 mb-0">Student Nominations</h1>
     </div>
 
-    <!-- Search and Filter Section -->
+    <!-- Filters -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" name="search" 
-                           placeholder="Search by student name or ID" value="{{ request.GET.search }}">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search by name or ID">
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" name="department">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-select" id="department" name="department">
                         <option value="">All Departments</option>
                         {% for dept in departments %}
-                        <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
-                            {{ dept.name }}
-                        </option>
+                            <option value="{{ dept.id }}" {% if department_id == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" name="sort">
-                        <option value="date" {% if request.GET.sort == 'date' %}selected{% endif %}>Sort by Date</option>
-                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Sort by Name</option>
-                        <option value="department" {% if request.GET.sort == 'department' %}selected{% endif %}>Sort by Department</option>
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="finalized" {% if status_filter == 'finalized' %}selected{% endif %}>Finalized</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-secondary w-100">
-                        <i class="fas fa-search"></i> Search
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+                        <option value="department" {% if sort_by == 'department' %}selected{% endif %}>Department</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
                     </button>
                 </div>
             </form>
@@ -50,113 +58,76 @@
     <div class="card">
         <div class="card-body">
             {% if nominations %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Student ID</th>
-                            <th>Department</th>
-                            <th>Approved By</th>
-                            <th>Approved Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for nomination in nominations %}
-                        <tr>
-                            <td>{{ nomination.student.user.get_full_name }}</td>
-                            <td>{{ nomination.student.student_id }}</td>
-                            <td>{{ nomination.department.name }}</td>
-                            <td>{{ nomination.reviewed_by.user.get_full_name }}</td>
-                            <td>{{ nomination.reviewed_at|date:"M d, Y H:i" }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
-                                        data-bs-target="#viewModal{{ nomination.id }}">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                {% if not nomination.finalized_by %}
-                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" 
-                                        data-bs-target="#finalizeModal{{ nomination.id }}">
-                                    <i class="fas fa-check"></i> Finalize
-                                </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-
-                        <!-- View Modal -->
-                        <div class="modal fade" id="viewModal{{ nomination.id }}" tabindex="-1">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Nomination Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="mb-4">
-                                            <h6>Student Information</h6>
-                                            <p><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
-                                            <p><strong>ID:</strong> {{ nomination.student.student_id }}</p>
-                                            <p><strong>Department:</strong> {{ nomination.department.name }}</p>
-                                        </div>
-                                        <div class="mb-4">
-                                            <h6>Nomination Text</h6>
-                                            <div class="border p-3 bg-light">
-                                                {{ nomination.nomination_text|linebreaks }}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Reviewed By</th>
+                                <th>Reviewed At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for nomination in nominations %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if nomination.student.profile_picture %}
+                                                <img src="{{ nomination.student.profile_picture.url }}" 
+                                                     alt="Profile" class="rounded-circle me-2" 
+                                                     style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="rounded-circle me-2 bg-light d-flex align-items-center justify-content-center"
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ nomination.student.user.get_full_name }}</div>
+                                                <small class="text-muted">{{ nomination.student.student_id }}</small>
                                             </div>
                                         </div>
-                                        <div class="mb-4">
-                                            <h6>HOD Review</h6>
-                                            <p><strong>Reviewed By:</strong> {{ nomination.reviewed_by.user.get_full_name }}</p>
-                                            <p><strong>Reviewed On:</strong> {{ nomination.reviewed_at|date:"M d, Y H:i" }}</p>
-                                            <p><strong>Feedback:</strong></p>
-                                            <div class="border p-3 bg-light">
-                                                {{ nomination.feedback|linebreaks }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Finalize Modal -->
-                        <div class="modal fade" id="finalizeModal{{ nomination.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Finalize Nomination</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <form method="post" action="{% url 'officer_finalize_nomination' nomination.id %}">
-                                        {% csrf_token %}
-                                        <div class="modal-body">
-                                            <p>Are you sure you want to finalize this nomination?</p>
-                                            <div class="mb-3">
-                                                <label class="form-label">Additional Notes (optional)</label>
-                                                <textarea class="form-control" name="finalization_notes" rows="3"></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-success">
-                                                <i class="fas fa-check"></i> Finalize Nomination
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                    </td>
+                                    <td>{{ nomination.department.name }}</td>
+                                    <td>
+                                        <span class="badge {% if nomination.status == 'approved' %}bg-warning
+                                                         {% elif nomination.status == 'finalized' %}bg-success
+                                                         {% else %}bg-danger{% endif %}">
+                                            {{ nomination.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ nomination.reviewed_by.user.get_full_name }}</td>
+                                    <td>{{ nomination.reviewed_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        {% if nomination.status == 'approved' %}
+                                            <a href="{% url 'officer_review_nomination' nomination.id %}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-check me-1"></i>Finalize
+                                            </a>
+                                        {% elif nomination.status == 'finalized' %}
+                                            <form method="POST" action="{% url 'officer_remove_finalized' nomination.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('Are you sure you want to remove this finalized nomination? This action cannot be undone.')">
+                                                    <i class="fas fa-trash me-1"></i>Remove
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% else %}
-            <div class="text-center py-4">
-                <p class="text-muted mb-0">No approved nominations found.</p>
-            </div>
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5>No nominations found</h5>
+                    <p class="text-muted">Try adjusting your filters to see more results.</p>
+                </div>
             {% endif %}
         </div>
     </div>

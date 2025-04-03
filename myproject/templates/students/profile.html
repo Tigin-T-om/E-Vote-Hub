@@ -15,7 +15,9 @@
                                 <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="rounded-circle profile-picture" id="profileImage">
                             {% else %}
                                 <div class="default-profile-picture rounded-circle" id="defaultProfile">
-                                    <i class="fas fa-user"></i>
+                                    <svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                    </svg>
                                 </div>
                             {% endif %}
                             <div class="profile-picture-overlay">
@@ -130,6 +132,8 @@
         width: 120px;
         height: 120px;
         object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .default-profile-picture {
@@ -139,8 +143,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
         color: #6c757d;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .default-profile-picture svg {
+        width: 60%;
+        height: 60%;
+        opacity: 0.7;
     }
 
     .profile-picture-overlay {
@@ -171,6 +182,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        transition: transform 0.2s ease;
+    }
+
+    .profile-picture-overlay .btn:hover {
+        transform: scale(1.1);
+        background: #fff;
     }
 
     .card-title {
@@ -194,8 +213,9 @@
             height: 100px;
         }
 
-        .default-profile-picture {
-            font-size: 2.5rem;
+        .profile-picture-overlay .btn {
+            width: 30px;
+            height: 30px;
         }
     }
 </style>
@@ -237,11 +257,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         alert('Error uploading image: ' + data.error);
+                        // Keep the default profile picture
+                        if (defaultProfile) {
+                            defaultProfile.style.display = 'flex';
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('Error uploading image. Please try again.');
+                    // Keep the default profile picture
+                    if (defaultProfile) {
+                        defaultProfile.style.display = 'flex';
+                    }
                 });
             }
         });
@@ -283,7 +311,11 @@ function removeProfilePicture() {
                     const defaultProfile = document.createElement('div');
                     defaultProfile.className = 'default-profile-picture rounded-circle';
                     defaultProfile.id = 'defaultProfile';
-                    defaultProfile.innerHTML = '<i class="fas fa-user"></i>';
+                    defaultProfile.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                        </svg>
+                    `;
                     profileImage.replaceWith(defaultProfile);
                 }
             } else {

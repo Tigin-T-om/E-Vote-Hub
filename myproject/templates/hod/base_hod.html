@@ -117,20 +117,14 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'hod_nominations' %}active{% endif %}" href="{% url 'hod_nominations' %}">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Class Leader Nominations</span>
+                        <i class="fas fa-user-check"></i>
+                        <span>Nominations</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-poll"></i>
-                        <span>Elections</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'hod_voting_results' %}active{% endif %}" href="{% url 'hod_voting_results' %}">
                         <i class="fas fa-chart-bar"></i>
-                        <span>Results</span>
+                        <span>Voting Results</span>
                     </a>
                 </li>
                 <li class="nav-item">

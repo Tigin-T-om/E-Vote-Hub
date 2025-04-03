@@ -14,6 +14,7 @@ from django.conf import settings
 import random
 import string
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -368,6 +369,16 @@ def student_nomination(request):
         student = request.user.student
         existing_nomination = ClassLeaderNomination.objects.filter(student=student).first()
         
+        # Check for active voting session
+        active_session = VotingSession.objects.filter(
+            department=student.department,
+            status='active'
+        ).first()
+        
+        if active_session:
+            messages.warning(request, 'Nominations are currently closed as there is an active voting session.')
+            return redirect('student_home')
+        
         if request.method == 'POST':
             nomination_text = request.POST.get('nomination_text')
             
@@ -387,7 +398,8 @@ def student_nomination(request):
         
         context = {
             'existing_nomination': existing_nomination,
-            'student': student
+            'student': student,
+            'active_session': active_session
         }
         return render(request, 'students/nomination.html', context)
     
@@ -510,11 +522,12 @@ def officer_nominations(request):
     # Get search and filter parameters
     search_query = request.GET.get('search', '')
     department_id = request.GET.get('department', '')
+    status_filter = request.GET.get('status', 'all')  # Add status filter
     sort_by = request.GET.get('sort', 'date')
     
-    # Base queryset
+    # Base queryset - include both approved and finalized nominations
     nominations = ClassLeaderNomination.objects.filter(
-        status='approved'
+        status__in=['approved', 'finalized']
     ).select_related(
         'student__user',
         'department',
@@ -533,13 +546,17 @@ def officer_nominations(request):
     if department_id:
         nominations = nominations.filter(department_id=department_id)
     
+    # Apply status filter
+    if status_filter != 'all':
+        nominations = nominations.filter(status=status_filter)
+    
     # Apply sorting
     if sort_by == 'name':
         nominations = nominations.order_by('student__user__first_name', 'student__user__last_name')
     elif sort_by == 'department':
         nominations = nominations.order_by('department__name')
     else:  # default: date
-        nominations = nominations.order_by('-reviewed_at')
+        nominations = nominations.order_by('-updated_at')
     
     # Get all departments for filter dropdown
     departments = Department.objects.all()
@@ -547,6 +564,10 @@ def officer_nominations(request):
     context = {
         'nominations': nominations,
         'departments': departments,
+        'search_query': search_query,
+        'department_id': department_id,
+        'status_filter': status_filter,
+        'sort_by': sort_by
     }
     return render(request, 'officer/nominations.html', context)
 
@@ -709,82 +730,142 @@ def officer_voting_management(request):
                 start_date = request.POST.get('start_date')
                 end_date = request.POST.get('end_date')
                 
-                # Create voting session with active status
+                # Get the department
+                department = Department.objects.get(id=department_id)
+                
+                # Update status of existing sessions
+                existing_sessions = VotingSession.objects.filter(
+                    department=department,
+                    status__in=['scheduled', 'active']
+                )
+                for session in existing_sessions:
+                    session.update_status_based_on_time()
+                
+                # Check again after updating statuses
+                existing_active = VotingSession.objects.filter(
+                    department=department,
+                    status__in=['scheduled', 'active']
+                ).first()
+                
+                if existing_active:
+                    messages.error(request, f'There is already a {existing_active.status} session for {department.name}.')
+                    return redirect('officer_voting_management')
+                
+                # Create voting session with scheduled status
                 session = VotingSession.objects.create(
-                    department_id=department_id,
+                    department=department,
                     start_date=start_date,
                     end_date=end_date,
                     created_by=officer,
-                    status='active'  # Set status to active when creating
+                    status='scheduled'
                 )
                 
-                # Add finalized candidates to the session
+                # Get finalized nominations
                 finalized_nominations = ClassLeaderNomination.objects.filter(
-                    department_id=department_id,
+                    department=department,
                     status='finalized'
-                )
+                ).select_related('student__user')
                 
+                candidates_created = 0
                 for nomination in finalized_nominations:
-                    # Determine gender based on student data
-                    student_gender = nomination.student.gender
-                    gender = 'male' if student_gender == 'M' else 'female'
-                    
-                    Candidate.objects.create(
-                        nomination=nomination,
-                        voting_session=session,
-                        gender=gender
-                    )
+                    try:
+                        # Determine gender based on student data
+                        student_gender = nomination.student.gender
+                        gender = 'male' if student_gender == 'M' else 'female'
+                        
+                        # Create candidate for the session
+                        Candidate.objects.create(
+                            nomination=nomination,
+                            voting_session=session,
+                            gender=gender
+                        )
+                        candidates_created += 1
+                    except Exception as e:
+                        messages.warning(request, f'Error creating candidate for {nomination.student.user.get_full_name()}: {str(e)}')
                 
-                messages.success(request, 'Voting session created successfully!')
+                messages.success(request, f'Voting session scheduled successfully with {candidates_created} candidates!')
                 
             except Exception as e:
                 messages.error(request, f'Error creating voting session: {str(e)}')
         
+        elif action == 'cancel_session':
+            try:
+                session = VotingSession.objects.get(id=request.POST.get('session_id'))
+                if session.status in ['scheduled', 'active']:
+                    # Delete associated candidates first
+                    Candidate.objects.filter(voting_session=session).delete()
+                    session.status = 'cancelled'
+                    session.save()
+                    messages.success(request, 'Voting session has been cancelled successfully.')
+                else:
+                    messages.error(request, 'Only scheduled or active sessions can be cancelled.')
+            except Exception as e:
+                messages.error(request, f'Error cancelling session: {str(e)}')
+        
         elif action == 'verify_results':
             try:
                 session = VotingSession.objects.get(id=request.POST.get('session_id'))
-                session.results_verified = True
-                session.save()
-                messages.success(request, 'Results verified successfully!')
+                if session.get_current_status() == 'completed':
+                    session.status = 'verified'
+                    session.save()
+                    messages.success(request, 'Results verified successfully!')
+                else:
+                    messages.error(request, 'Only completed sessions can be verified.')
             except Exception as e:
                 messages.error(request, f'Error verifying results: {str(e)}')
         
         elif action == 'publish_results':
             try:
                 session = VotingSession.objects.get(id=request.POST.get('session_id'))
-                session.status = 'published'
-                session.save()
-                messages.success(request, 'Results published successfully!')
+                if session.status == 'verified':
+                    session.status = 'published'
+                    session.save()
+                    messages.success(request, 'Results published successfully!')
+                else:
+                    messages.error(request, 'Only verified sessions can be published.')
             except Exception as e:
                 messages.error(request, f'Error publishing results: {str(e)}')
         
-        elif action == 'remove_session':
+        elif action == 'delete_session':
             try:
-                session_id = request.POST.get('session_id')
-                session = VotingSession.objects.get(id=session_id)
-                
-                if session.can_be_removed():
-                    session.status = 'cancelled'
-                    session.save()
-                    messages.success(request, 'Voting session has been removed successfully.')
+                session = VotingSession.objects.get(id=request.POST.get('session_id'))
+                if session.status in ['completed', 'published', 'cancelled']:
+                    # Delete associated votes and candidates first
+                    Vote.objects.filter(voting_session=session).delete()
+                    Candidate.objects.filter(voting_session=session).delete()
+                    session.delete()
+                    messages.success(request, 'Voting session has been deleted successfully.')
                 else:
-                    messages.error(request, 'This session cannot be removed.')
-                    
-            except VotingSession.DoesNotExist:
-                messages.error(request, 'Voting session not found.')
+                    messages.error(request, 'Only completed, published, or cancelled sessions can be deleted.')
             except Exception as e:
-                messages.error(request, f'Error removing session: {str(e)}')
+                messages.error(request, f'Error deleting session: {str(e)}')
 
-    # Get active and completed sessions
-    active_sessions = VotingSession.objects.filter(status='active')
+    # Update status of all sessions based on current time
+    all_sessions = VotingSession.objects.exclude(status__in=['verified', 'published', 'cancelled'])
+    for session in all_sessions:
+        session.update_status_based_on_time()
+
+    # Get sessions by status with candidate counts
+    scheduled_sessions = []
+    for session in VotingSession.objects.filter(status='scheduled'):
+        male_count = session.candidate_set.filter(gender='male').count()
+        female_count = session.candidate_set.filter(gender='female').count()
+        scheduled_sessions.append({
+            'session': session,
+            'male_count': male_count,
+            'female_count': female_count
+        })
+
+    active_sessions = VotingSession.objects.filter(status='active').prefetch_related('candidate_set')
     completed_sessions = VotingSession.objects.filter(
-        status__in=['completed', 'published']
+        status__in=['completed', 'verified', 'published', 'cancelled']
     ).order_by('-end_date')
     
     # Get departments for dropdown
     departments = Department.objects.all()
 
     context = {
+        'scheduled_sessions': scheduled_sessions,
         'active_sessions': active_sessions,
         'completed_sessions': completed_sessions,
         'departments': departments,
@@ -799,35 +880,59 @@ def student_voting(request):
         messages.error(request, 'Access denied. You are not authorized as a student.')
         return redirect('home')
     
-    # Debug information
-    current_time = timezone.now()
-    
-    # Get active voting session for student's department with debug checks
+    # Get active voting session for student's department
     active_session = VotingSession.objects.filter(
         department=student.department,
-        status='active'
+        status__in=['scheduled', 'active']
     ).first()
-    
-    if active_session:
-        # Check time constraints
-        if current_time < active_session.start_date:
-            messages.info(request, 'Voting session exists but has not started yet.')
-        elif current_time > active_session.end_date:
-            messages.info(request, 'Voting session has ended.')
-        else:
-            messages.success(request, 'Voting session is currently active.')
-    else:
-        # Debug information about why no session was found
-        all_sessions = VotingSession.objects.all()
-        if all_sessions.exists():
-            for session in all_sessions:
-                if session.department != student.department:
-                    messages.info(request, f'Found session for department: {session.department.name}')
-                if session.status != 'active':
-                    messages.info(request, f'Found session with status: {session.status}')
-        else:
-            messages.info(request, 'No voting sessions exist in the database.')
 
+    if active_session:
+        # Update session status based on current time
+        active_session.update_status_based_on_time()
+        
+        # Check if session is actually active
+        current_status = active_session.get_current_status()
+        if current_status == 'scheduled':
+            messages.info(request, f'Voting will start at {active_session.start_date.strftime("%B %d, %Y %I:%M %p")}')
+        elif current_status == 'completed':
+            messages.info(request, 'This voting session has ended.')
+            return redirect('student_voting')
+    
+    if request.method == 'POST' and active_session and active_session.status == 'active':
+        # Check if student has already voted
+        if Vote.objects.filter(student=student, voting_session=active_session).exists():
+            messages.error(request, 'You have already voted in this session.')
+            return redirect('student_voting')
+            
+        # Get selected candidates
+        male_candidate_id = request.POST.get('male_candidate')
+        female_candidate_id = request.POST.get('female_candidate')
+        
+        if not male_candidate_id or not female_candidate_id:
+            messages.error(request, 'Please select both male and female representatives.')
+            return redirect('student_voting')
+            
+        try:
+            # Get candidate objects
+            male_candidate = Candidate.objects.get(id=male_candidate_id, voting_session=active_session, gender='male')
+            female_candidate = Candidate.objects.get(id=female_candidate_id, voting_session=active_session, gender='female')
+            
+            # Create vote
+            Vote.objects.create(
+                student=student,
+                voting_session=active_session,
+                male_candidate=male_candidate,
+                female_candidate=female_candidate
+            )
+            
+            messages.success(request, 'Your vote has been recorded successfully!')
+            return redirect('student_voting')
+            
+        except Candidate.DoesNotExist:
+            messages.error(request, 'Invalid candidate selection.')
+        except Exception as e:
+            messages.error(request, f'Error recording vote: {str(e)}')
+    
     # Check if student has already voted
     has_voted = False
     if active_session:
@@ -839,7 +944,7 @@ def student_voting(request):
     # Get candidates for active session
     male_candidates = []
     female_candidates = []
-    if active_session:
+    if active_session and active_session.status == 'active':
         male_candidates = Candidate.objects.filter(
             voting_session=active_session,
             gender='male'
@@ -861,8 +966,6 @@ def student_voting(request):
         'male_candidates': male_candidates,
         'female_candidates': female_candidates,
         'published_results': published_results,
-        'student_department': student.department.name,  # Added for debugging
-        'current_time': current_time,  # Added for debugging
     }
     return render(request, 'students/voting.html', context)
 
@@ -956,3 +1059,335 @@ def student_profile(request):
         'student': student
     }
     return render(request, 'students/profile.html', context)
+
+@require_http_methods(["GET"])
+def get_eligible_students(request, department_id):
+    try:
+        # Get finalized nominations for the department
+        finalized_nominations = ClassLeaderNomination.objects.filter(
+            department_id=department_id,
+            status='finalized'
+        )
+        
+        # Count male and female candidates
+        male_count = finalized_nominations.filter(student__gender='M').count()
+        female_count = finalized_nominations.filter(student__gender='F').count()
+        
+        return JsonResponse({
+            'count': finalized_nominations.count(),
+            'male_count': male_count,
+            'female_count': female_count
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=400)
+
+@login_required
+def officer_remove_finalized(request, nomination_id):
+    try:
+        officer = request.user.officer
+    except Officer.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as an Officer.')
+        return redirect('home')
+    
+    nomination = get_object_or_404(ClassLeaderNomination, id=nomination_id)
+    
+    if nomination.status != 'finalized':
+        messages.error(request, 'Only finalized nominations can be removed.')
+        return redirect('officer_nominations')
+    
+    try:
+        # Check if the nomination is part of an active voting session
+        active_session = VotingSession.objects.filter(
+            department=nomination.department,
+            status='active'
+        ).first()
+        
+        if active_session:
+            # Check if the nomination has candidates in the active session
+            has_candidates = Candidate.objects.filter(
+                nomination=nomination,
+                voting_session=active_session
+            ).exists()
+            
+            if has_candidates:
+                messages.error(request, 'Cannot remove nomination that is part of an active voting session.')
+                return redirect('officer_nominations')
+        
+        # Remove the nomination
+        nomination.delete()
+        messages.success(request, 'Finalized nomination has been removed successfully.')
+        
+    except Exception as e:
+        messages.error(request, f'Error removing nomination: {str(e)}')
+    
+    return redirect('officer_nominations')
+
+@login_required
+def officer_voting_results(request):
+    try:
+        officer = request.user.officer
+    except Officer.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as an Officer.')
+        return redirect('home')
+
+    # Get filter parameters
+    department_id = request.GET.get('department')
+    session_id = request.GET.get('session')
+
+    # Get all departments for dropdown
+    departments = Department.objects.all()
+
+    # Initialize variables
+    selected_department = None
+    selected_session = None
+    total_votes = 0
+    male_candidates = []
+    female_candidates = []
+
+    if department_id:
+        try:
+            selected_department = Department.objects.get(id=department_id)
+            # Get all completed and published sessions for the selected department
+            sessions = VotingSession.objects.filter(
+                department=selected_department,
+                status__in=['completed', 'verified', 'published']
+            ).order_by('-end_date')
+        except Department.DoesNotExist:
+            messages.error(request, 'Invalid department selected.')
+            return redirect('officer_voting_results')
+    else:
+        # If no department selected, show all completed and published sessions
+        sessions = VotingSession.objects.filter(
+            status__in=['completed', 'verified', 'published']
+        ).order_by('-end_date')
+
+    if session_id:
+        try:
+            selected_session = VotingSession.objects.get(id=session_id)
+            if selected_session.status not in ['completed', 'verified', 'published']:
+                messages.error(request, 'Only completed, verified, or published sessions can be viewed.')
+                return redirect('officer_voting_results')
+            
+            # Get all candidates for the session
+            candidates = Candidate.objects.filter(
+                voting_session=selected_session
+            ).select_related(
+                'nomination__student__user'
+            )
+
+            # Calculate total votes
+            total_votes = Vote.objects.filter(voting_session=selected_session).count()
+
+            # Calculate vote counts for each candidate
+            for candidate in candidates:
+                # Count votes where this candidate is either the male or female candidate
+                vote_count = Vote.objects.filter(
+                    Q(voting_session=selected_session) &
+                    (Q(male_candidate=candidate) | Q(female_candidate=candidate))
+                ).count()
+                candidate.vote_count = vote_count
+
+            # Order candidates by vote count
+            candidates = sorted(candidates, key=lambda x: x.vote_count, reverse=True)
+
+            # Separate male and female candidates
+            male_candidates = [c for c in candidates if c.gender == 'male']
+            female_candidates = [c for c in candidates if c.gender == 'female']
+
+            # Calculate percentages for each candidate
+            for candidate in candidates:
+                if total_votes > 0:
+                    candidate.percentage = (candidate.vote_count / total_votes) * 100
+                else:
+                    candidate.percentage = 0
+
+        except VotingSession.DoesNotExist:
+            messages.error(request, 'Invalid session selected.')
+            return redirect('officer_voting_results')
+
+    context = {
+        'departments': departments,
+        'sessions': sessions,
+        'selected_department': selected_department.id if selected_department else None,
+        'selected_session': selected_session.id if selected_session else None,
+        'total_votes': total_votes,
+        'male_candidates': male_candidates,
+        'female_candidates': female_candidates,
+    }
+    return render(request, 'officer/voting_results.html', context)
+
+@login_required
+def hod_voting_results(request):
+    try:
+        hod = request.user.hod
+    except HOD.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a Head of Department.')
+        return redirect('home')
+
+    # Get published sessions for the HOD's department
+    published_sessions = VotingSession.objects.filter(
+        department=hod.department,
+        status='published'
+    ).order_by('-end_date')
+
+    # Add vote counts to each session
+    for session in published_sessions:
+        session.total_votes = Vote.objects.filter(voting_session=session).count()
+        session.male_candidates = Candidate.objects.filter(
+            voting_session=session,
+            gender='male'
+        ).select_related('nomination__student__user')
+        session.female_candidates = Candidate.objects.filter(
+            voting_session=session,
+            gender='female'
+        ).select_related('nomination__student__user')
+
+    context = {
+        'published_sessions': published_sessions,
+        'department': hod.department
+    }
+    return render(request, 'hod/voting_results.html', context)
+
+@login_required
+def hod_view_session_results(request, session_id):
+    try:
+        hod = request.user.hod
+    except HOD.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a Head of Department.')
+        return redirect('home')
+
+    try:
+        session = VotingSession.objects.get(
+            id=session_id,
+            department=hod.department,
+            status='published'
+        )
+    except VotingSession.DoesNotExist:
+        messages.error(request, 'Session not found or not published.')
+        return redirect('hod_voting_results')
+
+    # Get all candidates for the session
+    candidates = Candidate.objects.filter(
+        voting_session=session
+    ).select_related(
+        'nomination__student__user'
+    )
+
+    # Calculate total votes
+    total_votes = Vote.objects.filter(voting_session=session).count()
+
+    # Calculate vote counts for each candidate
+    for candidate in candidates:
+        vote_count = Vote.objects.filter(
+            Q(voting_session=session) &
+            (Q(male_candidate=candidate) | Q(female_candidate=candidate))
+        ).count()
+        candidate.vote_count = vote_count
+        if total_votes > 0:
+            candidate.percentage = (vote_count / total_votes) * 100
+        else:
+            candidate.percentage = 0
+
+    # Order candidates by vote count
+    candidates = sorted(candidates, key=lambda x: x.vote_count, reverse=True)
+
+    # Separate male and female candidates
+    male_candidates = [c for c in candidates if c.gender == 'male']
+    female_candidates = [c for c in candidates if c.gender == 'female']
+
+    context = {
+        'session': session,
+        'total_votes': total_votes,
+        'male_candidates': male_candidates,
+        'female_candidates': female_candidates
+    }
+    return render(request, 'hod/session_results.html', context)
+
+@login_required
+def student_voting_results(request):
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a student.')
+        return redirect('home')
+
+    # Get published sessions for the student's department
+    published_sessions = VotingSession.objects.filter(
+        department=student.department,
+        status='published'
+    ).order_by('-end_date')
+
+    # Add vote counts to each session
+    for session in published_sessions:
+        session.total_votes = Vote.objects.filter(voting_session=session).count()
+        session.male_candidates = Candidate.objects.filter(
+            voting_session=session,
+            gender='male'
+        ).select_related('nomination__student__user')
+        session.female_candidates = Candidate.objects.filter(
+            voting_session=session,
+            gender='female'
+        ).select_related('nomination__student__user')
+
+    context = {
+        'published_sessions': published_sessions,
+        'department': student.department
+    }
+    return render(request, 'students/voting_results.html', context)
+
+@login_required
+def student_view_session_results(request, session_id):
+    try:
+        student = request.user.student
+    except Student.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a student.')
+        return redirect('home')
+
+    try:
+        session = VotingSession.objects.get(
+            id=session_id,
+            department=student.department,
+            status='published'
+        )
+    except VotingSession.DoesNotExist:
+        messages.error(request, 'Session not found or not published.')
+        return redirect('student_voting_results')
+
+    # Get all candidates for the session
+    candidates = Candidate.objects.filter(
+        voting_session=session
+    ).select_related(
+        'nomination__student__user'
+    )
+
+    # Calculate total votes
+    total_votes = Vote.objects.filter(voting_session=session).count()
+
+    # Calculate vote counts for each candidate
+    for candidate in candidates:
+        vote_count = Vote.objects.filter(
+            Q(voting_session=session) &
+            (Q(male_candidate=candidate) | Q(female_candidate=candidate))
+        ).count()
+        candidate.vote_count = vote_count
+        if total_votes > 0:
+            candidate.percentage = (vote_count / total_votes) * 100
+        else:
+            candidate.percentage = 0
+
+    # Order candidates by vote count
+    candidates = sorted(candidates, key=lambda x: x.vote_count, reverse=True)
+
+    # Separate male and female candidates
+    male_candidates = [c for c in candidates if c.gender == 'male']
+    female_candidates = [c for c in candidates if c.gender == 'female']
+
+    context = {
+        'session': session,
+        'total_votes': total_votes,
+        'male_candidates': male_candidates,
+        'female_candidates': female_candidates
+    }
+    return render(request, 'students/session_results.html', context)

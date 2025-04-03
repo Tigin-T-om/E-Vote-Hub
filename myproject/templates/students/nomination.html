@@ -1,61 +1,90 @@
 {% extends 'students/base_student.html' %}
 
-{% block title %}Class Leader Nomination - EVoteHub{% endblock %}
+{% block title %}Submit Nomination - EVoteHub{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="h4 mb-0">Class Leader Nomination</h2>
-            <p class="text-muted">Submit your nomination to become a class leader</p>
+            <h2>Class Leader Nomination</h2>
+            <p class="text-muted">Submit your nomination for class leader position</p>
         </div>
     </div>
 
-    {% if existing_nomination %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="h5 mb-3">Your Current Nomination</h3>
-                    <div class="mb-3">
-                        <strong>Status:</strong>
-                        <span class="badge {% if existing_nomination.status == 'pending' %}bg-warning
-                                         {% elif existing_nomination.status == 'approved' %}bg-success
-                                         {% else %}bg-danger{% endif %}">
-                            {{ existing_nomination.status|title }}
-                        </span>
-                    </div>
-                    <div class="mb-3">
-                        <strong>Your Nomination:</strong>
-                        <p class="mb-0">{{ existing_nomination.nomination_text }}</p>
-                    </div>
-                    {% if existing_nomination.feedback %}
-                    <div class="mb-3">
-                        <strong>HOD Feedback:</strong>
-                        <p class="mb-0">{{ existing_nomination.feedback }}</p>
-                    </div>
-                    {% endif %}
-                    <div class="text-muted">
-                        <small>Submitted on: {{ existing_nomination.created_at|date:"F d, Y" }}</small>
-                    </div>
-                </div>
-            </div>
+    {% if active_session %}
+    <!-- Nominations Closed Message -->
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-lock fa-3x text-warning mb-3"></i>
+            <h4>Nominations Currently Closed</h4>
+            <p class="text-muted mb-0">Nominations are temporarily closed as there is an active voting session in progress.</p>
+            <p class="text-muted">Please check back after the voting session ends.</p>
+            <a href="{% url 'student_voting' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-vote-yea me-2"></i>Go to Voting Page
+            </a>
         </div>
     </div>
     {% else %}
+    <!-- Nomination Form -->
     <div class="row">
-        <div class="col-12">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
+                    {% if existing_nomination %}
+                    <!-- Existing Nomination -->
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Your Existing Nomination</h5>
+                        <p class="mb-0">{{ existing_nomination.nomination_text }}</p>
+                    </div>
+                    {% else %}
+                    <!-- New Nomination Form -->
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="nomination_text" class="form-label">Why do you want to be a class leader?</label>
-                            <textarea class="form-control" id="nomination_text" name="nomination_text" rows="5" required
-                                    placeholder="Please explain your motivation, leadership experience, and how you would contribute to the class..."></textarea>
+                            <label for="nomination_text" class="form-label">Your Nomination</label>
+                            <textarea class="form-control" id="nomination_text" name="nomination_text" 
+                                      rows="5" placeholder="Please explain why you would be a good class leader..."
+                                      required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit Nomination</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Nomination
+                        </button>
                     </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Guidelines Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Nomination Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Only one nomination per student
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Nominations must be clear and concise
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Include relevant experience and skills
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Be honest and professional
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Nominations will be reviewed by HOD
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
