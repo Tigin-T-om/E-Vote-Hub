@@ -47,31 +47,31 @@ class Officer(models.Model):
         return f"{self.user.get_full_name()}"
 
 class ClassLeaderNomination(models.Model):
-    STATUS_CHOICES = [
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    nomination_text = models.TextField()
+    marks = models.DecimalField(max_digits=4, decimal_places=2, default=0.00, help_text="CGPA on a scale of 10")
+    achievements = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
-        ('finalized', 'Finalized'),
-    ]
-
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    nomination_text = models.TextField(help_text="Why do you want to be a class leader?")
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    feedback = models.TextField(blank=True, null=True, help_text="HOD's feedback on the nomination")
+        ('finalized', 'Finalized')
+    ], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     reviewed_by = models.ForeignKey(HOD, on_delete=models.SET_NULL, null=True, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    feedback = models.TextField(blank=True, null=True)
     finalized_by = models.ForeignKey(Officer, on_delete=models.SET_NULL, null=True, blank=True)
     finalized_at = models.DateTimeField(null=True, blank=True)
-    finalization_notes = models.TextField(blank=True, null=True, help_text="Officer's notes on finalization")
+    finalization_notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        unique_together = ['student', 'department']
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.student.user.get_full_name()} - {self.department.name}"
+        return f"Nomination by {self.student.user.get_full_name()}"
 
     def save(self, *args, **kwargs):
         if not self.department:

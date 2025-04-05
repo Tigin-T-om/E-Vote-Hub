@@ -90,14 +90,19 @@
                                 <h6 class="text-muted mb-3">Nomination Details</h6>
                             </div>
                             <div class="col-12 mb-3">
-                                <label for="nomination_text" class="form-label">Why do you want to nominate yourself? <span class="text-danger">*</span></label>
+                                <label for="nomination_text" class="form-label">Why do you want to be a class leader? *</label>
                                 <textarea class="form-control" id="nomination_text" name="nomination_text" rows="4" required></textarea>
-                                <div class="form-text">Explain your motivation and what you hope to achieve if elected.</div>
+                                <div class="form-text">Explain your motivation and what you hope to achieve as a class leader.</div>
                             </div>
                             <div class="col-12 mb-3">
-                                <label for="achievements" class="form-label">Your Achievements</label>
-                                <textarea class="form-control" id="achievements" name="achievements" rows="4"></textarea>
-                                <div class="form-text">List your academic, leadership, or extracurricular accomplishments.</div>
+                                <label for="marks" class="form-label">Academic Marks (CGPA) *</label>
+                                <input type="number" class="form-control" id="marks" name="marks" step="0.01" min="0" max="10" required>
+                                <div class="form-text">Enter your current CGPA (on a scale of 10).</div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="achievements" class="form-label">Achievements (Optional)</label>
+                                <textarea class="form-control" id="achievements" name="achievements" rows="3"></textarea>
+                                <div class="form-text">List any academic or extracurricular achievements that support your nomination.</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="profile_picture" class="form-label">Profile Picture</label>

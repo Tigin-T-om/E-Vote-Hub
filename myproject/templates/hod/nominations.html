@@ -52,24 +52,26 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     {% if nomination.student.profile_picture %}
-                                    <img src="{{ nomination.student.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <img src="{{ nomination.student.profile_picture.url }}" 
+                                         class="rounded-circle me-2" width="32" height="32">
                                     {% else %}
-                                    <div class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-light" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-user text-secondary"></i>
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px;">
+                                        {{ nomination.student.user.get_full_name|first }}
                                     </div>
                                     {% endif %}
                                     <div>
                                         <div class="fw-bold">{{ nomination.student.user.get_full_name }}</div>
-                                        <small class="text-muted">{{ nomination.student.department.name }}</small>
+                                        <small class="text-muted">{{ nomination.student.student_id }}</small>
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ nomination.student.student_id }}</td>
-                            <td>{{ nomination.student.get_gender_display }}</td>
+                            <td>{{ nomination.department.name }}</td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewNominationModal{{ nomination.id }}">
-                                    <i class="fas fa-eye me-1"></i>View
-                                </button>
+                                <div class="mb-1">CGPA: {{ nomination.marks }}</div>
+                                {% if nomination.achievements %}
+                                <small class="text-muted">Has achievements</small>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if nomination.status == 'pending' %}

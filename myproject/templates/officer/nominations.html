@@ -127,6 +127,7 @@
                         <tr>
                             <th>Student</th>
                             <th>Department</th>
+                            <th>Marks</th>
                             <th>Status</th>
                             <th>Submitted</th>
                             <th>Actions</th>
@@ -153,6 +154,12 @@
                                 </div>
                             </td>
                             <td>{{ nomination.department.name }}</td>
+                            <td>
+                                <div class="mb-1">CGPA: {{ nomination.marks }}</div>
+                                {% if nomination.achievements %}
+                                <small class="text-muted">Has achievements</small>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if nomination.status == 'approved' %}
                                 <span class="badge bg-success">Approved</span>

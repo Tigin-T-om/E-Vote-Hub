@@ -381,18 +381,29 @@ def student_nomination(request):
         
         if request.method == 'POST':
             nomination_text = request.POST.get('nomination_text')
+            marks = request.POST.get('marks')
+            achievements = request.POST.get('achievements', '')
             
             if existing_nomination:
                 messages.error(request, 'You have already submitted a nomination.')
             else:
                 try:
+                    # Validate marks
+                    marks = float(marks)
+                    if marks < 0 or marks > 10:
+                        raise ValueError("Marks must be between 0 and 10")
+                    
                     nomination = ClassLeaderNomination.objects.create(
                         student=student,
-                        department=student.department,  # Explicitly set the department
-                        nomination_text=nomination_text
+                        department=student.department,
+                        nomination_text=nomination_text,
+                        marks=marks,
+                        achievements=achievements
                     )
                     messages.success(request, 'Your nomination has been submitted successfully!')
                     return redirect('student_nomination')
+                except ValueError as e:
+                    messages.error(request, str(e))
                 except Exception as e:
                     messages.error(request, f'Error submitting nomination: {str(e)}')
         
@@ -1413,17 +1424,44 @@ def student_voting_results(request):
         status='published'
     ).order_by('-end_date')
 
-    # Add vote counts to each session
+    # Add vote counts and winners to each session
     for session in published_sessions:
         session.total_votes = Vote.objects.filter(voting_session=session).count()
-        session.male_candidates = Candidate.objects.filter(
+        
+        # Get male candidates with vote counts
+        male_candidates = Candidate.objects.filter(
             voting_session=session,
             gender='male'
         ).select_related('nomination__student__user')
-        session.female_candidates = Candidate.objects.filter(
+        
+        for candidate in male_candidates:
+            candidate.vote_count = Vote.objects.filter(
+                voting_session=session,
+                male_candidate=candidate
+            ).count()
+        
+        # Get female candidates with vote counts
+        female_candidates = Candidate.objects.filter(
             voting_session=session,
             gender='female'
         ).select_related('nomination__student__user')
+        
+        for candidate in female_candidates:
+            candidate.vote_count = Vote.objects.filter(
+                voting_session=session,
+                female_candidate=candidate
+            ).count()
+        
+        # Find winners
+        if male_candidates.exists():
+            session.male_winner = max(male_candidates, key=lambda c: c.vote_count)
+        else:
+            session.male_winner = None
+            
+        if female_candidates.exists():
+            session.female_winner = max(female_candidates, key=lambda c: c.vote_count)
+        else:
+            session.female_winner = None
 
     context = {
         'published_sessions': published_sessions,
