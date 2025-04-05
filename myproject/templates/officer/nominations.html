@@ -1,135 +1,336 @@
 {% extends 'officer/base_officer.html' %}
+{% load static %}
 
-{% block title %}Nominations - EVoteHub{% endblock %}
+{% block title %}Manage Nominations - EVoteHub{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Page Header -->
+    <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Student Nominations</h1>
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Manage Nominations</h1>
+            <p class="text-muted">Review and manage class leader nominations from all departments</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nominations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_nominations }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Finalized Nominations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ finalized_nominations }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Review</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_nominations }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Departments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_departments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Filters -->
-    <div class="card mb-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
         <div class="card-body">
-            <form method="GET" class="row g-3">
-                <div class="col-md-3">
-                    <label for="search" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="search" name="search" 
-                           value="{{ search_query }}" placeholder="Search by name or ID">
-                </div>
-                <div class="col-md-3">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
                     <label for="department" class="form-label">Department</label>
-                    <select class="form-select" id="department" name="department">
+                    <select name="department" id="department" class="form-select" onchange="this.form.submit()">
                         <option value="">All Departments</option>
                         {% for dept in departments %}
-                            <option value="{{ dept.id }}" {% if department_id == dept.id|stringformat:"s" %}selected{% endif %}>
-                                {{ dept.name }}
-                            </option>
+                        <option value="{{ dept.id }}" {% if selected_department == dept.id %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
+                    <select name="status" id="status" class="form-select" onchange="this.form.submit()">
                         <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
                         <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
                         <option value="finalized" {% if status_filter == 'finalized' %}selected{% endif %}>Finalized</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="sort" class="form-label">Sort By</label>
-                    <select class="form-select" id="sort" name="sort">
-                        <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Date</option>
-                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
-                        <option value="department" {% if sort_by == 'department' %}selected{% endif %}>Department</option>
-                    </select>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-filter me-2"></i>Apply Filters
-                    </button>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search by name or ID">
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Nominations List -->
-    <div class="card">
+    <!-- Nominations Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Nominations</h6>
+        </div>
         <div class="card-body">
-            {% if nominations %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Department</th>
-                                <th>Status</th>
-                                <th>Reviewed By</th>
-                                <th>Reviewed At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for nomination in nominations %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if nomination.student.profile_picture %}
-                                                <img src="{{ nomination.student.profile_picture.url }}" 
-                                                     alt="Profile" class="rounded-circle me-2" 
-                                                     style="width: 32px; height: 32px; object-fit: cover;">
-                                            {% else %}
-                                                <div class="rounded-circle me-2 bg-light d-flex align-items-center justify-content-center"
-                                                     style="width: 32px; height: 32px;">
-                                                    <i class="fas fa-user text-muted"></i>
-                                                </div>
-                                            {% endif %}
-                                            <div>
-                                                <div class="fw-bold">{{ nomination.student.user.get_full_name }}</div>
-                                                <small class="text-muted">{{ nomination.student.student_id }}</small>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="nominationsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for nomination in nominations %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if nomination.student.profile_picture %}
+                                    <img src="{{ nomination.student.profile_picture.url }}" 
+                                         class="rounded-circle me-2" width="32" height="32">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px;">
+                                        {{ nomination.student.user.get_full_name|first }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ nomination.student.user.get_full_name }}</div>
+                                        <small class="text-muted">{{ nomination.student.student_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ nomination.department.name }}</td>
+                            <td>
+                                {% if nomination.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif nomination.status == 'finalized' %}
+                                <span class="badge bg-info">Finalized</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ nomination.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#viewNominationModal{{ nomination.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% if nomination.status == 'approved' %}
+                                    <button type="button" class="btn btn-sm btn-success" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#finalizeModal{{ nomination.id }}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                    {% if nomination.status == 'finalized' %}
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#removeModal{{ nomination.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- View Nomination Modal -->
+                        <div class="modal fade" id="viewNominationModal{{ nomination.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Nomination Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <h6 class="text-muted">Student Information</h6>
+                                                <p class="mb-1"><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
+                                                <p class="mb-1"><strong>ID:</strong> {{ nomination.student.student_id }}</p>
+                                                <p class="mb-1"><strong>Department:</strong> {{ nomination.department.name }}</p>
+                                                <p class="mb-1"><strong>Gender:</strong> {{ nomination.student.get_gender_display }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-muted">Nomination Status</h6>
+                                                <p class="mb-1"><strong>Status:</strong> 
+                                                    {% if nomination.status == 'approved' %}
+                                                    <span class="badge bg-success">Approved</span>
+                                                    {% elif nomination.status == 'finalized' %}
+                                                    <span class="badge bg-info">Finalized</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p class="mb-1"><strong>Submitted:</strong> {{ nomination.created_at|date:"M d, Y H:i" }}</p>
+                                                {% if nomination.reviewed_by %}
+                                                <p class="mb-1"><strong>Reviewed by:</strong> {{ nomination.reviewed_by.user.get_full_name }}</p>
+                                                <p class="mb-1"><strong>Reviewed at:</strong> {{ nomination.reviewed_at|date:"M d, Y H:i" }}</p>
+                                                {% endif %}
                                             </div>
                                         </div>
-                                    </td>
-                                    <td>{{ nomination.department.name }}</td>
-                                    <td>
-                                        <span class="badge {% if nomination.status == 'approved' %}bg-warning
-                                                         {% elif nomination.status == 'finalized' %}bg-success
-                                                         {% else %}bg-danger{% endif %}">
-                                            {{ nomination.status|title }}
-                                        </span>
-                                    </td>
-                                    <td>{{ nomination.reviewed_by.user.get_full_name }}</td>
-                                    <td>{{ nomination.reviewed_at|date:"M d, Y H:i" }}</td>
-                                    <td>
-                                        {% if nomination.status == 'approved' %}
-                                            <a href="{% url 'officer_review_nomination' nomination.id %}" 
-                                               class="btn btn-sm btn-primary">
-                                                <i class="fas fa-check me-1"></i>Finalize
-                                            </a>
-                                        {% elif nomination.status == 'finalized' %}
-                                            <form method="POST" action="{% url 'officer_remove_finalized' nomination.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-danger" 
-                                                        onclick="return confirm('Are you sure you want to remove this finalized nomination? This action cannot be undone.')">
-                                                    <i class="fas fa-trash me-1"></i>Remove
-                                                </button>
-                                            </form>
+
+                                        <div class="mb-4">
+                                            <h6 class="text-muted">Nomination Text</h6>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    {{ nomination.nomination_text|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {% if nomination.achievements %}
+                                        <div class="mb-4">
+                                            <h6 class="text-muted">Achievements</h6>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    {{ nomination.achievements|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                    <h5>No nominations found</h5>
-                    <p class="text-muted">Try adjusting your filters to see more results.</p>
-                </div>
-            {% endif %}
+
+                                        {% if nomination.feedback %}
+                                        <div class="mb-4">
+                                            <h6 class="text-muted">HOD Feedback</h6>
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    {{ nomination.feedback|linebreaks }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Finalize Modal -->
+                        {% if nomination.status == 'approved' %}
+                        <div class="modal fade" id="finalizeModal{{ nomination.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Finalize Nomination</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="post" action="{% url 'officer_finalize_nomination' nomination.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="finalization_notes" class="form-label">Finalization Notes</label>
+                                                <textarea class="form-control" id="finalization_notes" name="finalization_notes" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Finalize</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Remove Modal -->
+                        {% if nomination.status == 'finalized' %}
+                        <div class="modal fade" id="removeModal{{ nomination.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Remove Nomination</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="post" action="{% url 'officer_remove_finalized' nomination.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                This action will remove the nomination and allow the student to submit a new one.
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="removal_reason" class="form-label">Reason for Removal</label>
+                                                <textarea class="form-control" id="removal_reason" name="removal_reason" rows="3" required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Remove</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#nominationsTable').DataTable({
+            order: [[3, 'desc']], // Sort by submission date by default
+            pageLength: 10,
+            language: {
+                search: "Search nominations:"
+            }
+        });
+    });
+</script>
 {% endblock %}

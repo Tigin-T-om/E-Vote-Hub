@@ -1,88 +1,249 @@
 {% extends 'hod/base_hod.html' %}
+{% load static %}
 
-{% block title %}Class Leader Nominations - EVoteHub{% endblock %}
+{% block title %}Manage Nominations - EVoteHub{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Class Leader Nominations</h2>
-        <div class="text-muted">
-            Department: {{ department.name }}
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Manage Nominations</h2>
+            <p class="text-muted">Review and manage student nominations for your department</p>
         </div>
     </div>
 
-    {% if nominations %}
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Nominations Table -->
     <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Student Nominations</h5>
+        </div>
         <div class="card-body">
+            {% if nominations %}
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Student Name</th>
-                            <th>Student ID</th>
+                            <th>Student</th>
+                            <th>ID</th>
+                            <th>Gender</th>
+                            <th>Nomination</th>
                             <th>Status</th>
-                            <th>Submitted On</th>
+                            <th>Submitted</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for nomination in nominations %}
                         <tr>
-                            <td>{{ nomination.student.user.get_full_name }}</td>
-                            <td>{{ nomination.student.student_id }}</td>
                             <td>
-                                <span class="badge {% if nomination.status == 'pending' %}bg-warning
-                                                  {% elif nomination.status == 'approved' %}bg-success
-                                                  {% else %}bg-danger{% endif %}">
-                                    {{ nomination.status|title }}
-                                </span>
+                                <div class="d-flex align-items-center">
+                                    {% if nomination.student.profile_picture %}
+                                    <img src="{{ nomination.student.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle me-2 d-flex align-items-center justify-content-center bg-light" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ nomination.student.user.get_full_name }}</div>
+                                        <small class="text-muted">{{ nomination.student.department.name }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ nomination.student.student_id }}</td>
+                            <td>{{ nomination.student.get_gender_display }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewNominationModal{{ nomination.id }}">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </button>
+                            </td>
+                            <td>
+                                {% if nomination.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif nomination.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif nomination.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
                             </td>
                             <td>{{ nomination.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#viewNominationModal{{ nomination.id }}">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
                                 {% if nomination.status == 'pending' %}
-                                <a href="{% url 'review_nomination' nomination.id %}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-check"></i> Review
-                                </a>
+                                <button type="button" class="btn btn-sm btn-success me-1" data-bs-toggle="modal" data-bs-target="#approveNominationModal{{ nomination.id }}">
+                                    <i class="fas fa-check me-1"></i>Approve
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectNominationModal{{ nomination.id }}">
+                                    <i class="fas fa-times me-1"></i>Reject
+                                </button>
+                                {% elif nomination.status == 'approved' %}
+                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Approved</span>
+                                {% elif nomination.status == 'rejected' %}
+                                <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Rejected</span>
                                 {% endif %}
                             </td>
                         </tr>
 
                         <!-- View Nomination Modal -->
-                        <div class="modal fade" id="viewNominationModal{{ nomination.id }}" tabindex="-1">
-                            <div class="modal-dialog">
+                        <div class="modal fade" id="viewNominationModal{{ nomination.id }}" tabindex="-1" aria-labelledby="viewNominationModalLabel{{ nomination.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Nomination Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        <h5 class="modal-title" id="viewNominationModalLabel{{ nomination.id }}">Nomination Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <div class="mb-3">
-                                            <h6>Student Information</h6>
-                                            <p><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
-                                            <p><strong>ID:</strong> {{ nomination.student.student_id }}</p>
-                                            <p><strong>Department:</strong> {{ nomination.department.name }}</p>
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <h6 class="text-muted">Student Information</h6>
+                                                <p><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
+                                                <p><strong>ID:</strong> {{ nomination.student.student_id }}</p>
+                                                <p><strong>Department:</strong> {{ nomination.student.department.name }}</p>
+                                                <p><strong>Gender:</strong> {{ nomination.student.get_gender_display }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-muted">Nomination Information</h6>
+                                                <p><strong>Status:</strong> 
+                                                    {% if nomination.status == 'pending' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                    {% elif nomination.status == 'approved' %}
+                                                    <span class="badge bg-success">Approved</span>
+                                                    {% elif nomination.status == 'rejected' %}
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Submitted:</strong> {{ nomination.created_at|date:"M d, Y H:i" }}</p>
+                                                {% if nomination.status != 'pending' %}
+                                                <p><strong>Reviewed:</strong> {{ nomination.updated_at|date:"M d, Y H:i" }}</p>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                         <div class="mb-3">
-                                            <h6>Nomination Text</h6>
-                                            <p class="border p-3 bg-light">{{ nomination.nomination_text|linebreaks }}</p>
+                                            <h6 class="text-muted">Motivation</h6>
+                                            <div class="p-3 bg-light rounded">
+                                                {{ nomination.nomination_text|linebreaks }}
+                                            </div>
                                         </div>
-                                        {% if nomination.status != 'pending' %}
+                                        {% if nomination.achievements %}
                                         <div class="mb-3">
-                                            <h6>Review Information</h6>
-                                            <p><strong>Status:</strong> {{ nomination.status|title }}</p>
-                                            <p><strong>Reviewed By:</strong> {{ nomination.reviewed_by.user.get_full_name }}</p>
-                                            <p><strong>Reviewed On:</strong> {{ nomination.reviewed_at|date:"M d, Y H:i" }}</p>
-                                            <p><strong>Feedback:</strong></p>
-                                            <p class="border p-3 bg-light">{{ nomination.feedback|linebreaks }}</p>
+                                            <h6 class="text-muted">Achievements</h6>
+                                            <div class="p-3 bg-light rounded">
+                                                {{ nomination.achievements|linebreaks }}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% if nomination.feedback %}
+                                        <div class="mb-3">
+                                            <h6 class="text-muted">Feedback</h6>
+                                            <div class="p-3 bg-light rounded">
+                                                {{ nomination.feedback|linebreaks }}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% if nomination.profile_picture %}
+                                        <div class="mb-3">
+                                            <h6 class="text-muted">Profile Picture</h6>
+                                            <img src="{{ nomination.profile_picture.url }}" alt="Profile Picture" class="img-thumbnail" style="max-height: 200px;">
+                                        </div>
+                                        {% endif %}
+                                        {% if nomination.supporting_documents.all %}
+                                        <div class="mb-3">
+                                            <h6 class="text-muted">Supporting Documents</h6>
+                                            <ul class="list-group">
+                                                {% for doc in nomination.supporting_documents.all %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <a href="{{ doc.document.url }}" target="_blank">
+                                                        <i class="fas fa-file me-2"></i>{{ doc.document.name|slice:"19:" }}
+                                                    </a>
+                                                    <a href="{{ doc.document.url }}" class="btn btn-sm btn-outline-primary" download>
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
                                         </div>
                                         {% endif %}
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        {% if nomination.status == 'pending' %}
+                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveNominationModal{{ nomination.id }}" data-bs-dismiss="modal">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectNominationModal{{ nomination.id }}" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                        {% endif %}
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Approve Nomination Modal -->
+                        <div class="modal fade" id="approveNominationModal{{ nomination.id }}" tabindex="-1" aria-labelledby="approveNominationModalLabel{{ nomination.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title" id="approveNominationModalLabel{{ nomination.id }}">Approve Nomination</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="post" action="{% url 'hod_approve_nomination' nomination.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to approve this nomination? This will forward it to the officer for final review.</p>
+                                            <div class="mb-3">
+                                                <label for="feedback{{ nomination.id }}" class="form-label">Feedback (Optional)</label>
+                                                <textarea class="form-control" id="feedback{{ nomination.id }}" name="feedback" rows="3" placeholder="Add any feedback or comments for the student..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-check me-1"></i>Approve
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reject Nomination Modal -->
+                        <div class="modal fade" id="rejectNominationModal{{ nomination.id }}" tabindex="-1" aria-labelledby="rejectNominationModalLabel{{ nomination.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title" id="rejectNominationModalLabel{{ nomination.id }}">Reject Nomination</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form method="post" action="{% url 'hod_reject_nomination' nomination.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to reject this nomination? The student will be notified with your feedback.</p>
+                                            <div class="mb-3">
+                                                <label for="feedback{{ nomination.id }}" class="form-label">Feedback <span class="text-danger">*</span></label>
+                                                <textarea class="form-control" id="feedback{{ nomination.id }}" name="feedback" rows="3" placeholder="Please provide feedback explaining why the nomination was rejected..." required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="fas fa-times me-1"></i>Reject
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -90,12 +251,63 @@
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <h5>No Nominations Found</h5>
+                <p class="text-muted">There are no nominations to review at this time.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
-    {% else %}
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i> No nominations found for your department.
+
+    <!-- Statistics Card -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Nominations</h6>
+                            <h2 class="mb-0">{{ total_nominations }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Approved</h6>
+                            <h2 class="mb-0">{{ approved_nominations }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Rejected</h6>
+                            <h2 class="mb-0">{{ rejected_nominations }}</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

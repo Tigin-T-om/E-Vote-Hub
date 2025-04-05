@@ -409,22 +409,116 @@ def student_nomination(request):
 
 @login_required
 def hod_nominations(request):
-    # Check if user is HOD
-    try:
-        hod = request.user.hod
-    except HOD.DoesNotExist:
-        messages.error(request, 'Access denied. You are not authorized as a Head of Department.')
+    """View for HOD to manage nominations"""
+    if not hasattr(request.user, 'hod'):
+        messages.error(request, 'You do not have permission to access this page.')
         return redirect('home')
     
-    nominations = ClassLeaderNomination.objects.filter(
-        department=hod.department
-    ).select_related('student__user').order_by('-created_at')
+    department = request.user.hod.department
+    nominations = ClassLeaderNomination.objects.filter(student__department=department).order_by('-created_at')
+    
+    # Count statistics
+    total_nominations = nominations.count()
+    approved_nominations = nominations.filter(status='approved').count()
+    rejected_nominations = nominations.filter(status='rejected').count()
     
     context = {
+        'department': department,
         'nominations': nominations,
-        'department': hod.department
+        'total_nominations': total_nominations,
+        'approved_nominations': approved_nominations,
+        'rejected_nominations': rejected_nominations,
     }
+    
     return render(request, 'hod/nominations.html', context)
+
+@login_required
+def hod_approve_nomination(request, nomination_id):
+    """View for HOD to approve a nomination"""
+    if not hasattr(request.user, 'hod'):
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('home')
+    
+    try:
+        nomination = ClassLeaderNomination.objects.get(id=nomination_id)
+        
+        # Check if the nomination belongs to the HOD's department
+        if nomination.student.department != request.user.hod.department:
+            messages.error(request, 'You do not have permission to approve this nomination.')
+            return redirect('hod_nominations')
+        
+        # Check if the nomination is already processed
+        if nomination.status != 'pending':
+            messages.warning(request, 'This nomination has already been processed.')
+            return redirect('hod_nominations')
+        
+        # Process the approval
+        if request.method == 'POST':
+            feedback = request.POST.get('feedback', '')
+            
+            # Update the nomination
+            nomination.status = 'approved'
+            nomination.feedback = feedback
+            nomination.reviewed_by = request.user.hod
+            nomination.reviewed_at = timezone.now()
+            nomination.save()
+            
+            # Send notification to student
+            messages.success(request, f'Nomination for {nomination.student.user.get_full_name()} has been approved and forwarded to the officer.')
+            
+            # Redirect back to HOD nominations page
+            return redirect('hod_nominations')
+        
+    except ClassLeaderNomination.DoesNotExist:
+        messages.error(request, 'Nomination not found.')
+    
+    return redirect('hod_nominations')
+
+@login_required
+def hod_reject_nomination(request, nomination_id):
+    """View for HOD to reject a nomination"""
+    if not hasattr(request.user, 'hod'):
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('home')
+    
+    try:
+        nomination = ClassLeaderNomination.objects.get(id=nomination_id)
+        
+        # Check if the nomination belongs to the HOD's department
+        if nomination.student.department != request.user.hod.department:
+            messages.error(request, 'You do not have permission to reject this nomination.')
+            return redirect('hod_nominations')
+        
+        # Check if the nomination is already processed
+        if nomination.status != 'pending':
+            messages.warning(request, 'This nomination has already been processed.')
+            return redirect('hod_nominations')
+        
+        # Process the rejection
+        if request.method == 'POST':
+            feedback = request.POST.get('feedback', '')
+            
+            if not feedback:
+                messages.error(request, 'Feedback is required for rejection.')
+                return redirect('hod_nominations')
+            
+            # Update the nomination
+            nomination.status = 'rejected'
+            nomination.feedback = feedback
+            nomination.reviewed_by = request.user.hod
+            nomination.reviewed_at = timezone.now()
+            nomination.save()
+            
+            # Send notification to student
+            messages.success(request, f'Nomination for {nomination.student.user.get_full_name} has been rejected.')
+            
+            # Redirect back to nominations page
+            return redirect('hod_nominations')
+        
+    except ClassLeaderNomination.DoesNotExist:
+        messages.error(request, 'Nomination not found.')
+    
+    return redirect('hod_nominations')
 
 @login_required
 def review_nomination(request, nomination_id):
@@ -1085,42 +1179,42 @@ def get_eligible_students(request, department_id):
 
 @login_required
 def officer_remove_finalized(request, nomination_id):
-    try:
-        officer = request.user.officer
-    except Officer.DoesNotExist:
-        messages.error(request, 'Access denied. You are not authorized as an Officer.')
+    """View for officer to remove a finalized nomination"""
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, 'You do not have permission to perform this action.')
         return redirect('home')
     
-    nomination = get_object_or_404(ClassLeaderNomination, id=nomination_id)
-    
-    if nomination.status != 'finalized':
-        messages.error(request, 'Only finalized nominations can be removed.')
-        return redirect('officer_nominations')
-    
     try:
-        # Check if the nomination is part of an active voting session
-        active_session = VotingSession.objects.filter(
-            department=nomination.department,
-            status='active'
-        ).first()
+        nomination = ClassLeaderNomination.objects.get(id=nomination_id)
         
-        if active_session:
-            # Check if the nomination has candidates in the active session
-            has_candidates = Candidate.objects.filter(
-                nomination=nomination,
-                voting_session=active_session
-            ).exists()
+        # Check if the nomination is finalized
+        if nomination.status != 'finalized':
+            messages.warning(request, 'Only finalized nominations can be removed.')
+            return redirect('officer_nominations')
+        
+        # Process the removal
+        if request.method == 'POST':
+            removal_reason = request.POST.get('removal_reason', '')
             
-            if has_candidates:
-                messages.error(request, 'Cannot remove nomination that is part of an active voting session.')
+            if not removal_reason:
+                messages.error(request, 'Please provide a reason for removal.')
                 return redirect('officer_nominations')
+            
+            # Store the student and department for notification
+            student = nomination.student
+            department = nomination.department
+            
+            # Delete the nomination
+            nomination.delete()
+            
+            # Send notification to student
+            messages.success(request, f'Nomination for {student.user.get_full_name()} has been removed.')
+            
+            # Redirect back to nominations page
+            return redirect('officer_nominations')
         
-        # Remove the nomination
-        nomination.delete()
-        messages.success(request, 'Finalized nomination has been removed successfully.')
-        
-    except Exception as e:
-        messages.error(request, f'Error removing nomination: {str(e)}')
+    except ClassLeaderNomination.DoesNotExist:
+        messages.error(request, 'Nomination not found.')
     
     return redirect('officer_nominations')
 

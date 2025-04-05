@@ -20,6 +20,8 @@ urlpatterns = [
     # Nomination URLs
     path('student/nomination/', views.student_nomination, name='student_nomination'),
     path('hod/nominations/', views.hod_nominations, name='hod_nominations'),
+    path('hod/nominations/<int:nomination_id>/approve/', views.hod_approve_nomination, name='hod_approve_nomination'),
+    path('hod/nominations/<int:nomination_id>/reject/', views.hod_reject_nomination, name='hod_reject_nomination'),
     path('hod/nominations/<int:nomination_id>/review/', views.review_nomination, name='review_nomination'),
     # Officer URLs
     path('officer/dashboard/', views.officer_home, name='officer_home'),
