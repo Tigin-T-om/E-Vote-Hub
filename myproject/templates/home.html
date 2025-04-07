@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Home - EVoteHub{% endblock %}
-
+{% load static %}
 {% block content %}
 <!-- Hero Section -->
 <div class="row align-items-center py-5 mt-5">
@@ -9,13 +9,13 @@
         <h1 class="display-4 fw-bold mb-4 text-primary">Secure Electronic Voting Made Simple</h1>
         <p class="lead mb-4 text-muted">Experience the future of voting with our secure, transparent, and efficient electronic voting platform.</p>
         <div class="d-grid gap-3 d-md-flex justify-content-md-start">
-            <a href="#" class="btn btn-primary btn-lg px-4 me-md-2 rounded-pill">Start Voting</a>
-            <a href="#" class="btn btn-outline-primary btn-lg px-4 rounded-pill">Learn More</a>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 me-md-2 rounded-pill">Start Voting</a>
+            <a href="{% url 'about' %}" class="btn btn-outline-primary btn-lg px-4 rounded-pill">Learn More</a>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="position-relative">
-            <img src="https://via.placeholder.com/600x400" alt="Voting System" class="img-fluid rounded-4 shadow-lg">
+            <img src="\static\images\voting_management.jpg" alt="Voting System" class="img-fluid rounded-4 shadow-lg">
             <div class="position-absolute top-0 start-0 w-100 h-100 bg-primary rounded-4" style="opacity: 0.1; z-index: -1;"></div>
         </div>
     </div>
@@ -68,7 +68,7 @@
         <div class="bg-primary bg-opacity-10 rounded-4 p-5 text-center">
             <h2 class="fw-bold text-primary mb-4">Ready to Transform Your Voting Process?</h2>
             <p class="lead text-muted mb-4">Join thousands of organizations that trust EVoteHub for their election needs</p>
-            <a href="#" class="btn btn-primary btn-lg px-5 rounded-pill">Get Started Now</a>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-5 rounded-pill">Get Started Now</a>
         </div>
     </div>
 </div>

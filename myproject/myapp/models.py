@@ -52,6 +52,7 @@ class ClassLeaderNomination(models.Model):
     nomination_text = models.TextField()
     marks = models.DecimalField(max_digits=4, decimal_places=2, default=0.00, help_text="CGPA on a scale of 10")
     achievements = models.TextField(blank=True, null=True)
+    election_cycle = models.ForeignKey('VotingSession', on_delete=models.SET_NULL, null=True, blank=True, related_name='nominations', default=None)
     status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
         ('approved', 'Approved'),
@@ -95,6 +96,7 @@ class VotingSession(models.Model):
     created_by = models.ForeignKey(Officer, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    election_cycle = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sessions')
 
     def __str__(self):
         return f"{self.department.name} - {self.get_status_display()}"

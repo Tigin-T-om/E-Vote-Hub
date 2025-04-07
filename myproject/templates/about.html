@@ -100,32 +100,46 @@
         <h2 class="fw-bold text-primary">Our Team</h2>
         <p class="lead text-muted">Meet the people behind EVoteHub</p>
     </div>
+
     <div class="col-md-4 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
+        <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-circle mb-3">
+                <img src="/media/static/images/john_doe.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">John Doe</h3>
                 <p class="text-muted">Founder & CEO</p>
             </div>
         </div>
     </div>
+
     <div class="col-md-4 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
+        <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-circle mb-3">
+                <img src="/media/static/images/jane_smith.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">Jane Smith</h3>
                 <p class="text-muted">Technical Director</p>
             </div>
         </div>
     </div>
+
     <div class="col-md-4 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
+        <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="https://via.placeholder.com/150" alt="Team Member" class="rounded-circle mb-3">
+                <img src="/media/static/images/mikes.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">Mike Johnson</h3>
                 <p class="text-muted">Security Lead</p>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+</style>
 {% endblock %}

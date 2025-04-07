@@ -1,144 +1,167 @@
 {% extends 'students/base_student.html' %}
 
-{% block title %}Session Results - EVoteHub{% endblock %}
+{% block title %}Voting Results Details - EVoteHub{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2>Voting Session Results</h2>
-            <p class="text-muted">Detailed results for the voting session</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>Voting Results Details</h2>
+                    <p class="text-muted">Election held on {{ session.end_date|date:"F d, Y" }}</p>
+                </div>
+                <a href="{% url 'student_voting_results' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Results
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Session Info -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Session Details</h5>
-                    <p><strong>Department:</strong> {{ session.department.name }}</p>
-                    <p><strong>Start Date:</strong> {{ session.start_date|date:"M d, Y H:i" }}</p>
-                    <p><strong>End Date:</strong> {{ session.end_date|date:"M d, Y H:i" }}</p>
-                    <p><strong>Status:</strong> <span class="badge bg-success">{{ session.get_status_display }}</span></p>
+    <!-- Summary Card -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Votes Cast</h5>
+                    <h2 class="mb-0">{{ total_votes }}</h2>
                 </div>
-                <div class="col-md-6">
-                    <h5>Voting Summary</h5>
-                    <p><strong>Total Votes Cast:</strong> {{ total_votes }}</p>
-                    <p><strong>Male Candidates:</strong> {{ male_candidates|length }}</p>
-                    <p><strong>Female Candidates:</strong> {{ female_candidates|length }}</p>
-                    <p><strong>Published Date:</strong> {{ session.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Male Representative Winner</h5>
+                    {% if male_candidates %}
+                        {% with winner=male_candidates|first %}
+                            <h2 class="mb-0">{{ winner.nomination.student.user.get_full_name }}</h2>
+                            <small class="text-muted">{{ winner.vote_count }} votes ({{ winner.percentage|floatformat:1 }}%)</small>
+                        {% endwith %}
+                    {% else %}
+                        <p class="text-muted mb-0">No candidates</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Female Representative Winner</h5>
+                    {% if female_candidates %}
+                        {% with winner=female_candidates|first %}
+                            <h2 class="mb-0">{{ winner.nomination.student.user.get_full_name }}</h2>
+                            <small class="text-muted">{{ winner.vote_count }} votes ({{ winner.percentage|floatformat:1 }}%)</small>
+                        {% endwith %}
+                    {% else %}
+                        <p class="text-muted mb-0">No candidates</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Male Candidates Results -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Male Candidates Results</h5>
-        </div>
-        <div class="card-body">
-            {% if male_candidates %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Candidate</th>
-                            <th>Student ID</th>
-                            <th>Votes</th>
-                            <th>Percentage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+    <!-- Detailed Results -->
+    <div class="row">
+        <!-- Male Candidates -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Male Candidates</h5>
+                </div>
+                <div class="card-body">
+                    {% if male_candidates %}
                         {% for candidate in male_candidates %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ candidate.nomination.student.user.get_full_name }}</td>
-                            <td>{{ candidate.nomination.student.student_id }}</td>
-                            <td>{{ candidate.vote_count }}</td>
-                            <td>
-                                <div class="progress">
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if candidate.nomination.student.profile_picture %}
+                                        <img src="{{ candidate.nomination.student.profile_picture.url }}" 
+                                             class="rounded-circle me-2" width="48" height="48">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 48px; height: 48px;">
+                                            {{ candidate.nomination.student.user.get_full_name|first }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h5 class="mb-0">{{ candidate.nomination.student.user.get_full_name }}</h5>
+                                        <small class="text-muted">{{ candidate.nomination.student.student_id }}</small>
+                                    </div>
+                                </div>
+                                <div class="progress mb-2" style="height: 20px;">
                                     <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ candidate.percentage }}%"
+                                         style="width: {{ candidate.percentage }}%;" 
                                          aria-valuenow="{{ candidate.percentage }}" 
                                          aria-valuemin="0" 
                                          aria-valuemax="100">
-                                        {{ candidate.percentage|floatformat:1 }}%
+                                        {{ candidate.vote_count }} votes ({{ candidate.percentage|floatformat:1 }}%)
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
+                                <div class="mt-2">
+                                    <h6>Nomination Details:</h6>
+                                    <p class="mb-1"><strong>Academic Marks:</strong> {{ candidate.nomination.marks }}/10</p>
+                                    <p class="mb-1"><strong>Achievements:</strong> {{ candidate.nomination.achievements }}</p>
+                                    <p class="mb-0"><strong>Nomination Statement:</strong> {{ candidate.nomination.nomination_text }}</p>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
                         {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                        <p class="text-muted mb-0">No male candidates in this election.</p>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted mb-0">No male candidates found.</p>
-            {% endif %}
         </div>
-    </div>
 
-    <!-- Female Candidates Results -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Female Candidates Results</h5>
-        </div>
-        <div class="card-body">
-            {% if female_candidates %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Candidate</th>
-                            <th>Student ID</th>
-                            <th>Votes</th>
-                            <th>Percentage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <!-- Female Candidates -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Female Candidates</h5>
+                </div>
+                <div class="card-body">
+                    {% if female_candidates %}
                         {% for candidate in female_candidates %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ candidate.nomination.student.user.get_full_name }}</td>
-                            <td>{{ candidate.nomination.student.student_id }}</td>
-                            <td>{{ candidate.vote_count }}</td>
-                            <td>
-                                <div class="progress">
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if candidate.nomination.student.profile_picture %}
+                                        <img src="{{ candidate.nomination.student.profile_picture.url }}" 
+                                             class="rounded-circle me-2" width="48" height="48">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 48px; height: 48px;">
+                                            {{ candidate.nomination.student.user.get_full_name|first }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h5 class="mb-0">{{ candidate.nomination.student.user.get_full_name }}</h5>
+                                        <small class="text-muted">{{ candidate.nomination.student.student_id }}</small>
+                                    </div>
+                                </div>
+                                <div class="progress mb-2" style="height: 20px;">
                                     <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ candidate.percentage }}%"
+                                         style="width: {{ candidate.percentage }}%;" 
                                          aria-valuenow="{{ candidate.percentage }}" 
                                          aria-valuemin="0" 
                                          aria-valuemax="100">
-                                        {{ candidate.percentage|floatformat:1 }}%
+                                        {{ candidate.vote_count }} votes ({{ candidate.percentage|floatformat:1 }}%)
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
+                                <div class="mt-2">
+                                    <h6>Nomination Details:</h6>
+                                    <p class="mb-1"><strong>Academic Marks:</strong> {{ candidate.nomination.marks }}/10</p>
+                                    <p class="mb-1"><strong>Achievements:</strong> {{ candidate.nomination.achievements }}</p>
+                                    <p class="mb-0"><strong>Nomination Statement:</strong> {{ candidate.nomination.nomination_text }}</p>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
                         {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                        <p class="text-muted mb-0">No female candidates in this election.</p>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <p class="text-muted mb-0">No female candidates found.</p>
-            {% endif %}
         </div>
     </div>
 </div>
-
-<style>
-.progress {
-    height: 20px;
-    background-color: #e9ecef;
-}
-.progress-bar {
-    background-color: #0d6efd;
-    color: white;
-    font-size: 12px;
-    line-height: 20px;
-}
-</style>
 {% endblock %} 

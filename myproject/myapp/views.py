@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from .models import Student, Department, HOD, ClassLeaderNomination, Officer, VotingSession, Candidate, Vote
@@ -15,6 +15,9 @@ import random
 import string
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.forms import PasswordChangeForm
+import os
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -279,11 +282,49 @@ def student_home(request):
         messages.error(request, 'Student profile not found.')
         return redirect('logout')
     
+    # Get active voting sessions for student's department
+    active_sessions = VotingSession.objects.filter(
+        department=student.department,
+        status__in=['scheduled', 'active']
+    )
+    
+    # Count active elections
+    active_elections = active_sessions.count()
+    
+    # Count votes cast by the student
+    votes_cast = Vote.objects.filter(student=student).count()
+    
+    # Count pending votes (active sessions where student hasn't voted)
+    pending_votes = 0
+    for session in active_sessions:
+        if session.status == 'active' and not Vote.objects.filter(student=student, voting_session=session).exists():
+            pending_votes += 1
+    
+    # Get active sessions for display
+    active_sessions_list = []
+    for session in active_sessions:
+        session.update_status_based_on_time()
+        if session.status == 'active':
+            active_sessions_list.append(session)
+    
+    # Get recent votes
+    recent_votes = Vote.objects.filter(student=student).select_related('voting_session').order_by('-timestamp')[:5]
+    
+    # Get upcoming elections
+    upcoming_sessions = VotingSession.objects.filter(
+        department=student.department,
+        status='scheduled',
+        start_date__gt=timezone.now()
+    ).order_by('start_date')[:5]
+    
     context = {
         'student': student,
-        'active_elections': 3,  # Replace with actual count
-        'votes_cast': 5,        # Replace with actual count
-        'pending_votes': 2,     # Replace with actual count
+        'active_elections': active_elections,
+        'votes_cast': votes_cast,
+        'pending_votes': pending_votes,
+        'active_sessions': active_sessions_list,
+        'recent_votes': recent_votes,
+        'upcoming_sessions': upcoming_sessions,
     }
     return render(request, 'students/student_home.html', context)
 
@@ -393,12 +434,19 @@ def student_nomination(request):
                     if marks < 0 or marks > 10:
                         raise ValueError("Marks must be between 0 and 10")
                     
+                    # Get the latest voting session for the department
+                    latest_session = VotingSession.objects.filter(
+                        department=student.department,
+                        status='scheduled'
+                    ).order_by('-start_date').first()
+                    
                     nomination = ClassLeaderNomination.objects.create(
                         student=student,
                         department=student.department,
                         nomination_text=nomination_text,
                         marks=marks,
-                        achievements=achievements
+                        achievements=achievements,
+                        election_cycle=latest_session
                     )
                     messages.success(request, 'Your nomination has been submitted successfully!')
                     return redirect('student_nomination')
@@ -862,7 +910,8 @@ def officer_voting_management(request):
                     start_date=start_date,
                     end_date=end_date,
                     created_by=officer,
-                    status='scheduled'
+                    status='scheduled',
+                    election_cycle=None  # Explicitly set to None since it's nullable
                 )
                 
                 # Get finalized nominations
@@ -1099,7 +1148,8 @@ def student_profile(request):
                 # Change password
                 request.user.set_password(new_password)
                 request.user.save()
-                messages.success(request, 'Password changed successfully!')
+                update_session_auth_hash(request, request.user)  # Keep the user logged in
+                messages.success(request, 'Your password was successfully updated!')
                 return redirect('student_profile')
         
         elif 'profile_picture' in request.FILES:
@@ -1131,9 +1181,21 @@ def student_profile(request):
         elif request.headers.get('X-Requested-With') == 'XMLHttpRequest' and action == 'remove_profile_picture':
             try:
                 if student.profile_picture:
-                    student.profile_picture.delete()
+                    # Store the file path before deletion
+                    file_path = student.profile_picture.path
+                    # Delete the file from storage
+                    student.profile_picture.delete(save=False)
+                    # Set the field to None
                     student.profile_picture = None
                     student.save()
+                    
+                    # Try to delete the file from the filesystem if it still exists
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                        except:
+                            pass  # Ignore errors if file can't be deleted
+                            
                 return JsonResponse({'success': True})
             except Exception as e:
                 return JsonResponse({
@@ -1523,3 +1585,40 @@ def student_view_session_results(request, session_id):
         'female_candidates': female_candidates
     }
     return render(request, 'students/session_results.html', context)
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Keep the user logged in
+            messages.success(request, 'Your password was successfully updated!')
+            # Redirect based on user type
+            if hasattr(request.user, 'student'):
+                return redirect('student_home')
+            elif hasattr(request.user, 'officer'):
+                return redirect('officer_home')
+            elif hasattr(request.user, 'hod'):
+                return redirect('hod_home')
+            else:
+                return redirect('home')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    # Determine the base template based on user type
+    if hasattr(request.user, 'student'):
+        base_template = 'students/base_student.html'
+    elif hasattr(request.user, 'officer'):
+        base_template = 'officer/base_officer.html'
+    elif hasattr(request.user, 'hod'):
+        base_template = 'hod/base_hod.html'
+    else:
+        base_template = 'base.html'
+    
+    return render(request, 'change_password.html', {
+        'form': form,
+        'base_template': base_template
+    })

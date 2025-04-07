@@ -24,65 +24,45 @@
                                 <th>Male Representative</th>
                                 <th>Female Representative</th>
                                 <th>Total Votes</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for session in published_sessions %}
-                                <tr>
-                                    <td>{{ session.end_date|date:"M d, Y" }}</td>
-                                    <td>
-                                        {% if session.male_winner %}
-                                        <div class="d-flex align-items-center">
-                                            {% if session.male_winner.nomination.student.profile_picture %}
-                                            <img src="{{ session.male_winner.nomination.student.profile_picture.url }}" 
-                                                 class="rounded-circle me-2" width="32" height="32">
-                                            {% else %}
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
-                                                 style="width: 32px; height: 32px;">
-                                                {{ session.male_winner.nomination.student.user.get_full_name|first }}
-                                            </div>
-                                            {% endif %}
-                                            <div>
-                                                <div class="fw-bold">{{ session.male_winner.nomination.student.user.get_full_name }}</div>
-                                                <small class="text-muted">{{ session.male_winner.vote_count }} votes</small>
-                                            </div>
-                                        </div>
-                                        {% else %}
+                            <tr>
+                                <td>{{ session.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if session.male_winner %}
+                                        {{ session.male_winner.nomination.student.user.get_full_name }}
+                                        <span class="badge bg-success">Winner</span>
+                                    {% else %}
                                         <span class="text-muted">No winner</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if session.female_winner %}
-                                        <div class="d-flex align-items-center">
-                                            {% if session.female_winner.nomination.student.profile_picture %}
-                                            <img src="{{ session.female_winner.nomination.student.profile_picture.url }}" 
-                                                 class="rounded-circle me-2" width="32" height="32">
-                                            {% else %}
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
-                                                 style="width: 32px; height: 32px;">
-                                                {{ session.female_winner.nomination.student.user.get_full_name|first }}
-                                            </div>
-                                            {% endif %}
-                                            <div>
-                                                <div class="fw-bold">{{ session.female_winner.nomination.student.user.get_full_name }}</div>
-                                                <small class="text-muted">{{ session.female_winner.vote_count }} votes</small>
-                                            </div>
-                                        </div>
-                                        {% else %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.female_winner %}
+                                        {{ session.female_winner.nomination.student.user.get_full_name }}
+                                        <span class="badge bg-success">Winner</span>
+                                    {% else %}
                                         <span class="text-muted">No winner</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ session.total_votes }}</td>
-                                </tr>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.total_votes }}</td>
+                                <td>
+                                    <a href="{% url 'student_view_session_results' session.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-chart-bar"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-5">
+                <div class="text-center py-4">
                     <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                    <h5>No published results available</h5>
-                    <p class="text-muted">Results will appear here once they are published by the officers.</p>
+                    <h5>No Published Results</h5>
+                    <p class="text-muted mb-0">There are no published voting results for your department yet.</p>
                 </div>
             {% endif %}
         </div>

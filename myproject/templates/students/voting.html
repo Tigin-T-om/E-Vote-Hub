@@ -116,36 +116,5 @@
         </div>
     </div>
     {% endif %}
-
-    <!-- Previous Results -->
-    {% if published_results %}
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Previous Election Results</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Election Date</th>
-                            <th>Male Representative</th>
-                            <th>Female Representative</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in published_results %}
-                        <tr>
-                            <td>{{ result.end_date|date:"M d, Y" }}</td>
-                            <td>{{ result.male_winner.nomination.student.user.get_full_name }}</td>
-                            <td>{{ result.female_winner.nomination.student.user.get_full_name }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
