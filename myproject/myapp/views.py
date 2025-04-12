@@ -1622,3 +1622,140 @@ def change_password(request):
         'form': form,
         'base_template': base_template
     })
+
+@login_required
+def hod_department_students(request):
+    """View for HOD to see all students in their department"""
+    try:
+        hod = request.user.hod
+    except HOD.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a Head of Department.')
+        return redirect('home')
+    
+    # Get all students in the HOD's department
+    students = Student.objects.filter(
+        department=hod.department
+    ).select_related('user').order_by('user__first_name', 'user__last_name')
+    
+    context = {
+        'students': students,
+        'department': hod.department
+    }
+    return render(request, 'hod/department_students.html', context)
+
+@login_required
+def hod_profile(request):
+    """View for HOD to manage their profile"""
+    try:
+        hod = request.user.hod
+    except HOD.DoesNotExist:
+        messages.error(request, 'Access denied. You are not authorized as a Head of Department.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        # Check if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            try:
+                # Delete old profile picture if it exists
+                if hod.profile_picture:
+                    hod.profile_picture.delete()
+                
+                # Save new profile picture
+                hod.profile_picture = request.FILES['profile_picture']
+                hod.save()
+                
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'image_url': hod.profile_picture.url
+                    })
+                else:
+                    messages.success(request, 'Profile picture updated successfully!')
+            except Exception as e:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': str(e)
+                    })
+                else:
+                    messages.error(request, f'Error updating profile picture: {str(e)}')
+        
+        # Handle profile information update
+        elif 'first_name' in request.POST:
+            try:
+                # Update user details
+                request.user.first_name = request.POST.get('first_name')
+                request.user.last_name = request.POST.get('last_name')
+                request.user.email = request.POST.get('email')
+                request.user.save()
+                
+                if is_ajax:
+                    return JsonResponse({'success': True})
+                else:
+                    messages.success(request, 'Profile updated successfully!')
+            except Exception as e:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': str(e)
+                    })
+                else:
+                    messages.error(request, f'Error updating profile: {str(e)}')
+        
+        # Handle password change
+        elif 'current_password' in request.POST:
+            try:
+                current_password = request.POST.get('current_password')
+                new_password = request.POST.get('new_password')
+                confirm_password = request.POST.get('confirm_password')
+                
+                # Verify current password
+                if not request.user.check_password(current_password):
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Current password is incorrect'
+                        })
+                    else:
+                        messages.error(request, 'Current password is incorrect')
+                        return redirect('hod_profile')
+                
+                # Verify new passwords match
+                if new_password != confirm_password:
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'New passwords do not match'
+                        })
+                    else:
+                        messages.error(request, 'New passwords do not match')
+                        return redirect('hod_profile')
+                
+                # Change password
+                request.user.set_password(new_password)
+                request.user.save()
+                update_session_auth_hash(request, request.user)  # Keep the user logged in
+                
+                if is_ajax:
+                    return JsonResponse({'success': True})
+                else:
+                    messages.success(request, 'Password changed successfully!')
+            except Exception as e:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'error': str(e)
+                    })
+                else:
+                    messages.error(request, f'Error changing password: {str(e)}')
+        
+        if not is_ajax:
+            return redirect('hod_profile')
+    
+    context = {
+        'hod': hod
+    }
+    return render(request, 'hod/profile.html', context)

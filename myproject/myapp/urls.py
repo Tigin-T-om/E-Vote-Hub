@@ -17,6 +17,8 @@ urlpatterns = [
     path('admin/officers/', views.officer_management, name='officer_management'),
     path('student/dashboard/', views.student_home, name='student_home'),
     path('hod/dashboard/', views.hod_home, name='hod_home'),
+    path('hod/students/', views.hod_department_students, name='hod_department_students'),
+    path('hod/profile/', views.hod_profile, name='hod_profile'),
     # Nomination URLs
     path('student/nomination/', views.student_nomination, name='student_nomination'),
     path('hod/nominations/', views.hod_nominations, name='hod_nominations'),

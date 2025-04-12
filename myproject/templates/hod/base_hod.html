@@ -89,7 +89,7 @@
                             <i class="fas fa-user"></i> {{ request.user.get_full_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'hod_profile' %}"><i class="fas fa-user-cog"></i> Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                         </ul>
@@ -109,12 +109,12 @@
                         <span>Dashboard</span>
                     </a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="#">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'hod_department_students' %}active{% endif %}" href="{% url 'hod_department_students' %}">
                         <i class="fas fa-users"></i>
                         <span>Department Students</span>
                     </a>
-                </li> -->
+                </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'hod_nominations' %}active{% endif %}" href="{% url 'hod_nominations' %}">
                         <i class="fas fa-user-check"></i>
