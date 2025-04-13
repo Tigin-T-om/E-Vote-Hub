@@ -1,0 +1,181 @@
+{% extends 'students/base_student.html' %}
+
+{% block title %}Student Dashboard - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <img src="https://via.placeholder.com/64" alt="Student" class="rounded-circle">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h2 class="h4 mb-1">Welcome back, {{ request.user.get_full_name }}!</h2>
+                            <p class="text-muted mb-0">Here's what's happening with your voting activities today.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-poll fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-1">Active Elections</h3>
+                            <p class="h4 mb-0">3</p>
+                            <small class="text-success">You can vote in these elections</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-1">Votes Cast</h3>
+                            <p class="h4 mb-0">5</p>
+                            <small class="text-success">Your voting history</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-1">Pending Votes</h3>
+                            <p class="h4 mb-0">2</p>
+                            <small class="text-warning">Elections you haven't voted in</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Elections -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-4">Active Elections</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Election Title</th>
+                                    <th>Department</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Student Council Election 2024</td>
+                                    <td>All Departments</td>
+                                    <td>Mar 15, 2024</td>
+                                    <td>Mar 20, 2024</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Vote Now</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Class Representative Selection</td>
+                                    <td>{{ request.user.student.department.name }}</td>
+                                    <td>Mar 18, 2024</td>
+                                    <td>Mar 22, 2024</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">Vote Now</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-4">Your Recent Votes</h3>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Department Head Election</h6>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                            <p class="mb-1">Vote cast successfully</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Sports Committee Selection</h6>
+                                <small class="text-muted">1 week ago</small>
+                            </div>
+                            <p class="mb-1">Vote cast successfully</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-4">Upcoming Elections</h3>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Cultural Committee Selection</h6>
+                                <small class="text-muted">Starts in 3 days</small>
+                            </div>
+                            <p class="mb-1">Department: {{ request.user.student.department.name }}</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Technical Club Election</h6>
+                                <small class="text-muted">Starts in 1 week</small>
+                            </div>
+                            <p class="mb-1">Department: {{ request.user.student.department.name }}</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

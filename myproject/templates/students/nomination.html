@@ -54,7 +54,17 @@
                         <h5 class="alert-heading">Your Existing Nomination</h5>
                         <p class="mb-0">{{ existing_nomination.nomination_text }}</p>
                         <hr>
-                        <p class="mb-0">Status: <span class="badge bg-{{ existing_nomination.get_status_display|lower }}">{{ existing_nomination.get_status_display }}</span></p>
+                        <p class="mb-0">Status: 
+                            {% if existing_nomination.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif existing_nomination.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif existing_nomination.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% elif existing_nomination.status == 'finalized' %}
+                                <span class="badge bg-primary">Finalized</span>
+                            {% endif %}
+                        </p>
                     </div>
                     {% else %}
                     <!-- New Nomination Form -->

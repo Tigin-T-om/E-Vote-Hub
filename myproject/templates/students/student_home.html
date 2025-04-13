@@ -11,11 +11,15 @@
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <img src="https://via.placeholder.com/64" alt="Student" class="rounded-circle">
+                            {% if student.profile_picture %}
+                                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://via.placeholder.com/64" alt="Profile Picture" class="rounded-circle">
+                            {% endif %}
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h2 class="h4 mb-1">Welcome back, {{ request.user.get_full_name }}!</h2>
-                            <p class="text-muted mb-0">Here's what's happening with your voting activities today.</p>
+                            <h2 class="h4 mb-1">Welcome, {{ request.user.get_full_name }}!</h2>
+                            <p class="text-muted mb-0">{{ student.department.name }} Department</p>
                         </div>
                     </div>
                 </div>
@@ -23,58 +27,43 @@
         </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Quick Stats -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-poll fa-2x text-primary"></i>
-                            </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Active Elections</h6>
+                            <h2 class="mt-2 mb-0">{{ active_elections }}</h2>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="h5 mb-1">Active Elections</h3>
-                            <p class="h4 mb-0">3</p>
-                            <small class="text-success">You can vote in these elections</small>
-                        </div>
+                        <i class="fas fa-vote-yea fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-check-circle fa-2x text-success"></i>
-                            </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Votes Cast</h6>
+                            <h2 class="mt-2 mb-0">{{ votes_cast }}</h2>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="h5 mb-1">Votes Cast</h3>
-                            <p class="h4 mb-0">5</p>
-                            <small class="text-success">Your voting history</small>
-                        </div>
+                        <i class="fas fa-check-circle fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-clock fa-2x text-warning"></i>
-                            </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Pending Votes</h6>
+                            <h2 class="mt-2 mb-0">{{ pending_votes }}</h2>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="h5 mb-1">Pending Votes</h3>
-                            <p class="h4 mb-0">2</p>
-                            <small class="text-warning">Elections you haven't voted in</small>
-                        </div>
+                        <i class="fas fa-clock fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -85,94 +74,85 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-body p-4">
-                    <h3 class="h5 mb-4">Active Elections</h3>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Election Title</th>
-                                    <th>Department</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Student Council Election 2024</td>
-                                    <td>All Departments</td>
-                                    <td>Mar 15, 2024</td>
-                                    <td>Mar 20, 2024</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Vote Now</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Class Representative Selection</td>
-                                    <td>{{ request.user.student.department.name }}</td>
-                                    <td>Mar 18, 2024</td>
-                                    <td>Mar 22, 2024</td>
-                                    <td><span class="badge bg-success">Active</span></td>
-                                    <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Vote Now</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Active Elections</h5>
+                    {% if active_sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Election</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in active_sessions %}
+                                    <tr>
+                                        <td>{{ session.title }}</td>
+                                        <td>{{ session.start_date|date:"M d, Y H:i" }}</td>
+                                        <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <span class="badge bg-success">Active</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'student_voting' %}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-vote-yea"></i> Vote Now
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No active elections at the moment.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Upcoming Elections -->
     <div class="row">
-        <div class="col-md-6 mb-4">
+        <div class="col-12">
             <div class="card">
-                <div class="card-body p-4">
-                    <h3 class="h5 mb-4">Your Recent Votes</h3>
-                    <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Department Head Election</h6>
-                                <small class="text-muted">2 days ago</small>
-                            </div>
-                            <p class="mb-1">Vote cast successfully</p>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Sports Committee Selection</h6>
-                                <small class="text-muted">1 week ago</small>
-                            </div>
-                            <p class="mb-1">Vote cast successfully</p>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-body p-4">
-                    <h3 class="h5 mb-4">Upcoming Elections</h3>
-                    <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Cultural Committee Selection</h6>
-                                <small class="text-muted">Starts in 3 days</small>
-                            </div>
-                            <p class="mb-1">Department: {{ request.user.student.department.name }}</p>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Technical Club Election</h6>
-                                <small class="text-muted">Starts in 1 week</small>
-                            </div>
-                            <p class="mb-1">Department: {{ request.user.student.department.name }}</p>
-                        </a>
-                    </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Upcoming Elections</h5>
+                    {% if upcoming_sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Election</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in upcoming_sessions %}
+                                    <tr>
+                                        <td>{{ session.title }}</td>
+                                        <td>{{ session.start_date|date:"M d, Y H:i" }}</td>
+                                        <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <span class="badge bg-info">Scheduled</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No upcoming elections scheduled.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

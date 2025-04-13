@@ -165,22 +165,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Top Navbar -->
-        <div class="top-navbar">
-            <button class="btn btn-link d-md-none" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="user-profile dropdown">
-                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
-                    <i class="fas fa-ellipsis-v"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="{% url 'student_profile' %}"><i class="fas fa-user me-2"></i>My Profile</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                </ul>
-            </div>
-        </div>
 
         <!-- Messages -->
         {% if messages %}

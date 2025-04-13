@@ -1,0 +1,63 @@
+{% extends 'hod/base_hod.html' %}
+
+{% block title %}Voting Results - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Voting Results</h2>
+            <p class="text-muted">View published voting results for your department</p>
+        </div>
+    </div>
+
+    <!-- Results List -->
+    <div class="card">
+        <div class="card-body">
+            {% if published_sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Session</th>
+                                <th>Total Votes</th>
+                                <th>Male Candidates</th>
+                                <th>Female Candidates</th>
+                                <th>Published Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in published_sessions %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ session.start_date|date:"M d, Y H:i" }} - {{ session.end_date|date:"M d, Y H:i" }}</div>
+                                        <small class="text-muted">Status: {{ session.get_status_display }}</small>
+                                    </td>
+                                    <td>{{ session.total_votes }}</td>
+                                    <td>{{ session.male_candidates|length }}</td>
+                                    <td>{{ session.female_candidates|length }}</td>
+                                    <td>{{ session.updated_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'hod_view_session_results' session.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5>No published results available</h5>
+                    <p class="text-muted">Results will appear here once they are published by the officers.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
