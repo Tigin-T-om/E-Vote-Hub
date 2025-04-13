@@ -1,0 +1,214 @@
+{% extends 'officer/base_officer.html' %}
+
+{% block title %}Voting Management - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Voting Session Management</h2>
+            <p class="text-muted">Create and manage voting sessions for class leader elections</p>
+        </div>
+    </div>
+
+    <!-- Create Session Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Create New Voting Session</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_session">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="start_date" class="form-label">Start Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="end_date" class="form-label">End Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Session</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scheduled Sessions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Scheduled Sessions</h5>
+        </div>
+        <div class="card-body">
+            {% if scheduled_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Male Candidates</th>
+                            <th>Female Candidates</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session_data in scheduled_sessions %}
+                        <tr>
+                            <td>{{ session_data.session.department.name }}</td>
+                            <td>{{ session_data.session.start_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session_data.session.end_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session_data.male_count }}</td>
+                            <td>{{ session_data.female_count }}</td>
+                            <td>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="cancel_session">
+                                    <input type="hidden" name="session_id" value="{{ session_data.session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this session? This action cannot be undone.')">
+                                        Cancel
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No scheduled sessions.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Active Sessions</h5>
+        </div>
+        <div class="card-body">
+            {% if active_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Total Votes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in active_sessions %}
+                        <tr>
+                            <td>{{ session.department.name }}</td>
+                            <td>{{ session.start_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session.vote_set.count }}</td>
+                            <td>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="cancel_session">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this session? This action cannot be undone.')">
+                                        Cancel
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No active sessions.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Completed Sessions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Completed Sessions</h5>
+        </div>
+        <div class="card-body">
+            {% if completed_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Total Votes</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in completed_sessions %}
+                        <tr>
+                            <td>{{ session.department.name }}</td>
+                            <td>{{ session.start_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session.end_date|date:"M d, Y H:i" }}</td>
+                            <td>{{ session.vote_set.count }}</td>
+                            <td><span class="badge bg-{{ session.status|lower }}">{{ session.status }}</span></td>
+                            <td>
+                                {% if session.status == 'completed' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="verify_results">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">Verify</button>
+                                </form>
+                                {% elif session.status == 'verified' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="publish_results">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-primary">Publish</button>
+                                </form>
+                                {% endif %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_session">
+                                    <input type="hidden" name="session_id" value="{{ session.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this session? This action cannot be undone.')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No completed sessions.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-scheduled { background-color: #ffc107; }
+.bg-active { background-color: #28a745; }
+.bg-completed { background-color: #6c757d; }
+.bg-verified { background-color: #17a2b8; }
+.bg-published { background-color: #007bff; }
+.bg-cancelled { background-color: #dc3545; }
+</style>
+{% endblock %}
