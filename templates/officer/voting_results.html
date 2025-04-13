@@ -1,0 +1,198 @@
+{% extends 'officer/base_officer.html' %}
+
+{% block title %}Voting Results - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Voting Results</h2>
+            <p class="text-muted">View and analyze voting results before publishing</p>
+        </div>
+    </div>
+
+    <!-- Department Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Select Department</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-select" id="department" name="department" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if selected_department == dept.id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="session" class="form-label">Voting Session</label>
+                    <select class="form-select" id="session" name="session" onchange="this.form.submit()">
+                        <option value="">Select a Session</option>
+                        {% for session in sessions %}
+                            <option value="{{ session.id }}" {% if selected_session == session.id %}selected{% endif %}>
+                                {{ session.start_date|date:"M d, Y H:i" }} - {{ session.end_date|date:"M d, Y H:i" }}
+                                ({{ session.get_status_display }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_session %}
+    <!-- Results Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Results Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Total Votes Cast</h6>
+                            <h3 class="mb-0">{{ total_votes }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Male Candidates</h6>
+                            <h3 class="mb-0">{{ male_candidates|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Female Candidates</h6>
+                            <h3 class="mb-0">{{ female_candidates|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Male Candidates Results -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Male Candidates Results</h5>
+        </div>
+        <div class="card-body">
+            {% if male_candidates %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Candidate</th>
+                            <th>Student ID</th>
+                            <th>Votes</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in male_candidates %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ candidate.nomination.student.user.get_full_name }}</td>
+                            <td>{{ candidate.nomination.student.student_id }}</td>
+                            <td>{{ candidate.vote_count }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ candidate.percentage }}%"
+                                         aria-valuenow="{{ candidate.percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ candidate.percentage|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No male candidates found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Female Candidates Results -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Female Candidates Results</h5>
+        </div>
+        <div class="card-body">
+            {% if female_candidates %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Candidate</th>
+                            <th>Student ID</th>
+                            <th>Votes</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in female_candidates %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ candidate.nomination.student.user.get_full_name }}</td>
+                            <td>{{ candidate.nomination.student.student_id }}</td>
+                            <td>{{ candidate.vote_count }}</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ candidate.percentage }}%"
+                                         aria-valuenow="{{ candidate.percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ candidate.percentage|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No female candidates found.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Please select a department and a voting session to view results.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.progress {
+    height: 20px;
+    background-color: #e9ecef;
+}
+.progress-bar {
+    background-color: #0d6efd;
+    color: white;
+    font-size: 12px;
+    line-height: 20px;
+}
+</style>
+{% endblock %} 

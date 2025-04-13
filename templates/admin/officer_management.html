@@ -1,0 +1,193 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Officer Management - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Officer Management</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOfficerModal">
+            <i class="fas fa-plus"></i> Add Officer
+        </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="search" placeholder="Search by name or username" 
+                           value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Officers List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Created On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                        <tr>
+                            <td>{{ officer.user.get_full_name }}</td>
+                            <td>{{ officer.user.username }}</td>
+                            <td>{{ officer.user.email }}</td>
+                            <td>
+                                <span class="badge {% if officer.user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if officer.user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ officer.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
+                                        data-bs-target="#editOfficerModal{{ officer.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm {% if officer.user.is_active %}btn-danger{% else %}btn-success{% endif %}"
+                                        data-bs-toggle="modal" data-bs-target="#statusModal{{ officer.id }}">
+                                    <i class="fas {% if officer.user.is_active %}fa-user-times{% else %}fa-user-check{% endif %}"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Officer Modal -->
+<div class="modal fade" id="addOfficerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" name="action" value="add_officer">Add Officer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Officer Modals -->
+{% for officer in officers %}
+<div class="modal fade" id="editOfficerModal{{ officer.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="officer_id" value="{{ officer.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" name="first_name" 
+                               value="{{ officer.user.first_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" name="last_name" 
+                               value="{{ officer.user.last_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" 
+                               value="{{ officer.user.email }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" name="action" value="edit_officer">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Change Modal -->
+<div class="modal fade" id="statusModal{{ officer.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if officer.user.is_active %}Deactivate{% else %}Activate{% endif %} Officer Account
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="officer_id" value="{{ officer.id }}">
+                <div class="modal-body">
+                    <p>Are you sure you want to 
+                        {% if officer.user.is_active %}deactivate{% else %}activate{% endif %}
+                        this officer account?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn {% if officer.user.is_active %}btn-danger{% else %}btn-success{% endif %}"
+                            name="action" value="toggle_status">
+                        {% if officer.user.is_active %}Deactivate{% else %}Activate{% endif %} Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %} 
