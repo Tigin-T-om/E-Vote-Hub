@@ -1,31 +1,4 @@
-# Python bytecode
-__pycache__/
-*.py[cod]
-
-# Django specific
-*.sqlite3
-*.log
-*.pot
 *.pyc
+*.sqlite3
+*.env
 
-# Media / uploads
-media/
-media/static/images/profiles/
-*.jpg
-*.jpeg
-*.png
-*.gif
-
-# Static generated
-staticfiles/
-
-# IDE / Editor folders
-.vscode/
-.idea/
-
-# Environment files
-.env
-
-# OS files
-.DS_Store
-Thumbs.db
