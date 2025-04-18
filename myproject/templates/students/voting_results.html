@@ -34,7 +34,14 @@
                                 <td>
                                     {% if session.male_winner %}
                                         {{ session.male_winner.nomination.student.user.get_full_name }}
-                                        <span class="badge bg-success">Winner</span>
+                                        {% if session.male_winner.tied %}
+                                            <div>
+                                                <span class="badge bg-warning">Tied Vote</span>
+                                                <span class="badge bg-info">Won by Academic Score</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-success">Winner</span>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">No winner</span>
                                     {% endif %}
@@ -42,7 +49,14 @@
                                 <td>
                                     {% if session.female_winner %}
                                         {{ session.female_winner.nomination.student.user.get_full_name }}
-                                        <span class="badge bg-success">Winner</span>
+                                        {% if session.female_winner.tied %}
+                                            <div>
+                                                <span class="badge bg-warning">Tied Vote</span>
+                                                <span class="badge bg-info">Won by Academic Score</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-success">Winner</span>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-muted">No winner</span>
                                     {% endif %}

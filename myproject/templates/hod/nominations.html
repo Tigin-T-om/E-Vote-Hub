@@ -27,9 +27,9 @@
     {% endif %}
 
     <!-- Nominations Table -->
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Student Nominations</h5>
+    <div class="card shadow-sm">
+        <div class="card-header" style="background: linear-gradient(45deg, #2c3e50, #3498db);">
+            <h5 class="mb-0 text-white"><i class="fas fa-list me-2"></i>Student Nominations</h5>
         </div>
         <div class="card-body">
             {% if nominations %}
@@ -40,7 +40,7 @@
                             <th>Student</th>
                             <th>ID</th>
                             <th>Gender</th>
-                            <th>Nomination</th>
+                            <th>CGPA</th>
                             <th>Status</th>
                             <th>Submitted</th>
                             <th>Actions</th>
@@ -66,16 +66,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ nomination.department.name }}</td>
-                            <td>
-                                <div class="mb-1">CGPA: {{ nomination.marks }}</div>
-                                {% if nomination.achievements %}
-                                <small class="text-muted">Has achievements</small>
-                                {% endif %}
-                            </td>
+                            <td>{{ nomination.student.student_id }}</td>
+                            <td>{{ nomination.student.get_gender_display }}</td>
+                            <td>{{ nomination.marks }}</td>
                             <td>
                                 {% if nomination.status == 'pending' %}
-                                <span class="badge bg-warning">Pending</span>
+                                <span class="badge bg-warning text-dark">Pending</span>
                                 {% elif nomination.status == 'approved' %}
                                 <span class="badge bg-success">Approved</span>
                                 {% elif nomination.status == 'rejected' %}
@@ -84,110 +80,110 @@
                             </td>
                             <td>{{ nomination.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                {% if nomination.status == 'pending' %}
-                                <button type="button" class="btn btn-sm btn-success me-1" data-bs-toggle="modal" data-bs-target="#approveNominationModal{{ nomination.id }}">
-                                    <i class="fas fa-check me-1"></i>Approve
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectNominationModal{{ nomination.id }}">
-                                    <i class="fas fa-times me-1"></i>Reject
-                                </button>
-                                {% elif nomination.status == 'approved' %}
-                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Approved</span>
-                                {% elif nomination.status == 'rejected' %}
-                                <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Rejected</span>
-                                {% endif %}
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewNominationModal{{ nomination.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% if nomination.status == 'pending' %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#approveNominationModal{{ nomination.id }}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectNominationModal{{ nomination.id }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% elif nomination.status == 'rejected' %}
+                                    <a href="{% url 'hod_remove_nomination' nomination.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this nomination? The student will be able to reapply.')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
 
                         <!-- View Nomination Modal -->
-                        <div class="modal fade" id="viewNominationModal{{ nomination.id }}" tabindex="-1" aria-labelledby="viewNominationModalLabel{{ nomination.id }}" aria-hidden="true">
+                        <div class="modal fade" id="viewNominationModal{{ nomination.id }}" tabindex="-1">
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="viewNominationModalLabel{{ nomination.id }}">Nomination Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <div class="modal-header" style="background: linear-gradient(45deg, #2c3e50, #3498db);">
+                                        <h5 class="modal-title text-white">
+                                            <i class="fas fa-file-alt me-2"></i>Nomination Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="row mb-4">
                                             <div class="col-md-6">
                                                 <h6 class="text-muted">Student Information</h6>
-                                                <p><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
-                                                <p><strong>ID:</strong> {{ nomination.student.student_id }}</p>
-                                                <p><strong>Department:</strong> {{ nomination.student.department.name }}</p>
-                                                <p><strong>Gender:</strong> {{ nomination.student.get_gender_display }}</p>
+                                                <div class="card bg-light">
+                                                    <div class="card-body">
+                                                        <p class="mb-1"><strong>Name:</strong> {{ nomination.student.user.get_full_name }}</p>
+                                                        <p class="mb-1"><strong>ID:</strong> {{ nomination.student.student_id }}</p>
+                                                        <p class="mb-1"><strong>Department:</strong> {{ nomination.department.name }}</p>
+                                                        <p class="mb-0"><strong>Gender:</strong> {{ nomination.student.get_gender_display }}</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <h6 class="text-muted">Nomination Information</h6>
-                                                <p><strong>Status:</strong> 
-                                                    {% if nomination.status == 'pending' %}
-                                                    <span class="badge bg-warning">Pending</span>
-                                                    {% elif nomination.status == 'approved' %}
-                                                    <span class="badge bg-success">Approved</span>
-                                                    {% elif nomination.status == 'rejected' %}
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                    {% endif %}
-                                                </p>
-                                                <p><strong>Submitted:</strong> {{ nomination.created_at|date:"M d, Y H:i" }}</p>
-                                                {% if nomination.status != 'pending' %}
-                                                <p><strong>Reviewed:</strong> {{ nomination.updated_at|date:"M d, Y H:i" }}</p>
-                                                {% endif %}
+                                                <h6 class="text-muted">Nomination Status</h6>
+                                                <div class="card bg-light">
+                                                    <div class="card-body">
+                                                        <p class="mb-1">
+                                                            <strong>Status:</strong> 
+                                                            {% if nomination.status == 'pending' %}
+                                                            <span class="badge bg-warning text-dark">Pending</span>
+                                                            {% elif nomination.status == 'approved' %}
+                                                            <span class="badge bg-success">Approved</span>
+                                                            {% elif nomination.status == 'rejected' %}
+                                                            <span class="badge bg-danger">Rejected</span>
+                                                            {% endif %}
+                                                        </p>
+                                                        <p class="mb-1"><strong>CGPA:</strong> {{ nomination.marks }}</p>
+                                                        <p class="mb-1"><strong>Submitted:</strong> {{ nomination.created_at|date:"M d, Y H:i" }}</p>
+                                                        {% if nomination.status != 'pending' %}
+                                                        <p class="mb-0"><strong>Reviewed:</strong> {{ nomination.updated_at|date:"M d, Y H:i" }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <h6 class="text-muted">Motivation</h6>
-                                            <div class="p-3 bg-light rounded">
-                                                {{ nomination.nomination_text|linebreaks }}
+
+                                        <div class="mb-4">
+                                            <h6 class="text-muted">Motivation Statement</h6>
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    {{ nomination.nomination_text|linebreaks }}
+                                                </div>
                                             </div>
                                         </div>
+
                                         {% if nomination.achievements %}
-                                        <div class="mb-3">
+                                        <div class="mb-4">
                                             <h6 class="text-muted">Achievements</h6>
-                                            <div class="p-3 bg-light rounded">
-                                                {{ nomination.achievements|linebreaks }}
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    {{ nomination.achievements|linebreaks }}
+                                                </div>
                                             </div>
                                         </div>
                                         {% endif %}
+
                                         {% if nomination.feedback %}
-                                        <div class="mb-3">
+                                        <div class="mb-4">
                                             <h6 class="text-muted">Feedback</h6>
-                                            <div class="p-3 bg-light rounded">
-                                                {{ nomination.feedback|linebreaks }}
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    {{ nomination.feedback|linebreaks }}
+                                                </div>
                                             </div>
-                                        </div>
-                                        {% endif %}
-                                        {% if nomination.profile_picture %}
-                                        <div class="mb-3">
-                                            <h6 class="text-muted">Profile Picture</h6>
-                                            <img src="{{ nomination.profile_picture.url }}" alt="Profile Picture" class="img-thumbnail" style="max-height: 200px;">
-                                        </div>
-                                        {% endif %}
-                                        {% if nomination.supporting_documents.all %}
-                                        <div class="mb-3">
-                                            <h6 class="text-muted">Supporting Documents</h6>
-                                            <ul class="list-group">
-                                                {% for doc in nomination.supporting_documents.all %}
-                                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                    <a href="{{ doc.document.url }}" target="_blank">
-                                                        <i class="fas fa-file me-2"></i>{{ doc.document.name|slice:"19:" }}
-                                                    </a>
-                                                    <a href="{{ doc.document.url }}" class="btn btn-sm btn-outline-primary" download>
-                                                        <i class="fas fa-download"></i>
-                                                    </a>
-                                                </li>
-                                                {% endfor %}
-                                            </ul>
                                         </div>
                                         {% endif %}
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        {% if nomination.status == 'pending' %}
-                                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveNominationModal{{ nomination.id }}" data-bs-dismiss="modal">
-                                            <i class="fas fa-check me-1"></i>Approve
-                                        </button>
-                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectNominationModal{{ nomination.id }}" data-bs-dismiss="modal">
-                                            <i class="fas fa-times me-1"></i>Reject
-                                        </button>
+                                        {% if nomination.status == 'rejected' %}
+                                        <a href="{% url 'hod_remove_nomination' nomination.id %}" class="btn btn-danger">
+                                            <i class="fas fa-trash me-2"></i>Remove & Allow Reapply
+                                        </a>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -263,10 +259,10 @@
         </div>
     </div>
 
-    <!-- Statistics Card -->
+    <!-- Statistics Cards -->
     <div class="row mt-4">
         <div class="col-md-4">
-            <div class="card bg-primary text-white">
+            <div class="card bg-gradient-primary text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -281,7 +277,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-success text-white">
+            <div class="card bg-gradient-success text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -296,7 +292,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-danger text-white">
+            <div class="card bg-gradient-danger text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -312,4 +308,38 @@
         </div>
     </div>
 </div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(45deg, #c0392b, #e74c3c);
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-content {
+    border: none;
+    border-radius: 15px;
+}
+
+.btn-group .btn {
+    border-radius: 5px;
+    margin: 0 2px;
+}
+
+.table > :not(caption) > * > * {
+    padding: 1rem 0.75rem;
+}
+</style>
 {% endblock %}

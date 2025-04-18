@@ -3,27 +3,39 @@
 {% block title %}HOD Profile - EVoteHub{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
+    <!-- Alert Container -->
+    <div id="alertContainer" class="alert-container"></div>
+    
     <div class="row">
         <div class="col-md-4">
             <!-- Profile Card -->
-            <div class="card mb-4">
+            <div class="card shadow-sm mb-4">
                 <div class="card-body text-center">
-                    <div class="mb-3">
-                        {% if hod.profile_picture %}
-                            <img src="{{ hod.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                        {% else %}
-                            <img src="https://via.placeholder.com/150" alt="Profile Picture" class="rounded-circle">
-                        {% endif %}
+                    <div class="profile-picture-wrapper mb-4">
+                        <div class="profile-picture-container">
+                            {% if hod.profile_picture %}
+                                <img src="{{ hod.profile_picture.url }}" alt="Profile Picture" class="profile-image" id="profilePreview">
+                            {% else %}
+                                <div class="profile-initials" id="profileInitials">
+                                    {{ request.user.get_full_name|slice:":1" }}
+                                </div>
+                                <img src="" alt="Profile Picture" class="profile-image d-none" id="profilePreview">
+                            {% endif %}
+                            <div class="profile-picture-overlay">
+                                <button type="button" class="btn btn-light btn-sm rounded-circle" onclick="document.getElementById('profilePictureInput').click()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <h4 class="mb-1">{{ request.user.get_full_name }}</h4>
-                    <p class="text-muted mb-3">Head of {{ hod.department.name }} Department</p>
+                    <h4 class="mb-1 fw-bold">{{ request.user.get_full_name }}</h4>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-user-tie me-2"></i>Head of {{ hod.department.name }} Department
+                    </p>
                     <form method="post" enctype="multipart/form-data" id="profilePictureForm">
                         {% csrf_token %}
                         <input type="file" name="profile_picture" id="profilePictureInput" class="d-none" accept="image/*">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('profilePictureInput').click()">
-                            <i class="fas fa-camera"></i> Change Picture
-                        </button>
                     </form>
                 </div>
             </div>
@@ -31,53 +43,86 @@
         
         <div class="col-md-8">
             <!-- Profile Information -->
-            <div class="card mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header" style="background: linear-gradient(45deg, #2c3e50, #3498db);">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-user-edit me-2"></i>Profile Information
+                    </h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title mb-4">Profile Information</h5>
                     <form method="post" id="profileForm">
                         {% csrf_token %}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">First Name</label>
-                                <input type="text" class="form-control" name="first_name" value="{{ request.user.first_name }}" required>
+                                <label class="form-label fw-bold">First Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" name="first_name" value="{{ request.user.first_name }}" required>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" class="form-control" name="last_name" value="{{ request.user.last_name }}" required>
+                                <label class="form-label fw-bold">Last Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" name="last_name" value="{{ request.user.last_name }}" required>
+                                </div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" value="{{ request.user.email }}" required>
+                            <label class="form-label fw-bold">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" name="email" value="{{ request.user.email }}" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Department</label>
-                            <input type="text" class="form-control" value="{{ hod.department.name }}" readonly>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Department</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-building"></i></span>
+                                <input type="text" class="form-control" value="{{ hod.department.name }}" readonly>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fas fa-save me-2"></i>Update Profile
+                        </button>
                     </form>
                 </div>
             </div>
 
             <!-- Change Password -->
-            <div class="card">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background: linear-gradient(45deg, #2c3e50, #3498db);">
+                    <h5 class="card-title mb-0 text-white">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title mb-4">Change Password</h5>
                     <form method="post" id="passwordForm">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <input type="password" class="form-control" name="current_password" required>
+                            <label class="form-label fw-bold">Current Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" name="current_password" required>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" name="new_password" required>
+                            <label class="form-label fw-bold">New Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="password" class="form-control" name="new_password" required>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" name="confirm_password" required>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Confirm New Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-check-double"></i></span>
+                                <input type="password" class="form-control" name="confirm_password" required>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Change Password</button>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
                     </form>
                 </div>
             </div>
@@ -85,14 +130,222 @@
     </div>
 </div>
 
+<style>
+/* Profile Picture Styles */
+.profile-picture-wrapper {
+    padding: 20px 0;
+}
+
+.profile-picture-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 50%;
+    background: #f8f9fa;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 4px solid #fff;
+    overflow: hidden;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+}
+
+.profile-picture-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.profile-picture-container:hover .profile-picture-overlay {
+    opacity: 1;
+}
+
+.profile-picture-overlay button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0);
+    transition: transform 0.3s ease;
+}
+
+.profile-picture-container:hover .profile-picture-overlay button {
+    transform: scale(1);
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Form Styles */
+.form-label {
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.input-group-text {
+    background: transparent;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+/* Button Styles */
+.btn-gradient {
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    border: none;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 7px;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(45deg, #3498db, #2c3e50);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+}
+
+/* Updated Alert Styles */
+.alert-container {
+    position: fixed;
+    left: 250px; /* Adjust this value based on your sidebar width */
+    bottom: 20px;
+    z-index: 1000;
+    width: 300px;
+}
+
+.alert {
+    margin-bottom: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.alert-success {
+    background: linear-gradient(45deg, #27ae60, #2ecc71);
+    border: none;
+    color: white;
+}
+
+.alert-danger {
+    background: linear-gradient(45deg, #c0392b, #e74c3c);
+    border: none;
+    color: white;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle profile picture change
     const profilePictureInput = document.getElementById('profilePictureInput');
     const profilePictureForm = document.getElementById('profilePictureForm');
+    const profilePreview = document.getElementById('profilePreview');
+    const profileInitials = document.getElementById('profileInitials');
     
     profilePictureInput.addEventListener('change', function() {
         if (this.files && this.files[0]) {
+            const file = this.files[0];
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                showAlert('Please select an image file', 'danger');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('Image size should be less than 5MB', 'danger');
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (profileInitials) {
+                    profileInitials.style.display = 'none';
+                }
+                profilePreview.classList.remove('d-none');
+                profilePreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+
+            // Show loading state
+            const loadingSpinner = document.createElement('div');
+            loadingSpinner.className = 'loading-spinner';
+            profilePreview.parentElement.appendChild(loadingSpinner);
+
+            // Upload the file
             const formData = new FormData(profilePictureForm);
             fetch(window.location.href, {
                 method: 'POST',
@@ -103,15 +356,24 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
+                loadingSpinner.remove();
                 if (data.success) {
-                    window.location.reload();
+                    showAlert('Profile picture updated successfully!', 'success');
+                    // Update the profile picture URL
+                    profilePreview.src = data.image_url;
                 } else {
-                    alert(data.error || 'Error updating profile picture');
+                    throw new Error(data.error || 'Error updating profile picture');
                 }
             })
             .catch(error => {
+                loadingSpinner.remove();
                 console.error('Error:', error);
-                alert('Error updating profile picture');
+                showAlert(error.message, 'danger');
+                // Revert to previous state if there's an error
+                if (profileInitials) {
+                    profileInitials.style.display = 'flex';
+                    profilePreview.classList.add('d-none');
+                }
             });
         }
     });
@@ -131,15 +393,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Profile updated successfully!');
-                window.location.reload();
+                showAlert('Profile updated successfully!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
             } else {
-                alert(data.error || 'Error updating profile');
+                showAlert(data.error || 'Error updating profile', 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error updating profile');
+            showAlert('Error updating profile', 'danger');
         });
     });
 
@@ -147,6 +409,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordForm = document.getElementById('passwordForm');
     passwordForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        const newPassword = this.querySelector('[name="new_password"]').value;
+        const confirmPassword = this.querySelector('[name="confirm_password"]').value;
+
+        if (newPassword !== confirmPassword) {
+            showAlert('New passwords do not match', 'danger');
+            return;
+        }
+
         const formData = new FormData(this);
         fetch(window.location.href, {
             method: 'POST',
@@ -158,17 +428,35 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Password changed successfully!');
-                window.location.reload();
+                showAlert('Password changed successfully!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
             } else {
-                alert(data.error || 'Error changing password');
+                showAlert(data.error || 'Error changing password', 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error changing password');
+            showAlert('Error changing password', 'danger');
         });
     });
+
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        alertContainer.appendChild(alertDiv);
+        
+        // Remove the alert after 3 seconds
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transform = 'translateX(-20px)';
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+    }
 });
 </script>
 {% endblock %} 

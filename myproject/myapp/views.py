@@ -56,8 +56,15 @@ def login_view(request):
                 hod = request.user.hod
                 return redirect('hod_home')
             except HOD.DoesNotExist:
-                # Must be a student
-                return redirect('student_home')
+                try:
+                    # Check if user is a student
+                    student = request.user.student
+                    return redirect('student_home')
+                except Student.DoesNotExist:
+                    # If no profile exists, log them out and show error
+                    logout(request)
+                    messages.error(request, 'Your account is not properly set up. Please contact the administrator.')
+                    return redirect('login')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -85,12 +92,19 @@ def login_view(request):
                     messages.info(request, f'Welcome back, Head of {hod.department.name} Department!')
                     return redirect('hod_home')
                 except HOD.DoesNotExist:
-                    # Regular student user
-                    messages.info(request, 'Welcome back!')
-                    next_url = request.GET.get('next')
-                    if next_url:
-                        return redirect(next_url)
-                    return redirect('student_home')
+                    try:
+                        # Check if user is a student
+                        student = user.student
+                        messages.info(request, 'Welcome back!')
+                        next_url = request.GET.get('next')
+                        if next_url:
+                            return redirect(next_url)
+                        return redirect('student_home')
+                    except Student.DoesNotExist:
+                        # If no profile exists, log them out and show error
+                        logout(request)
+                        messages.error(request, 'Your account is not properly set up. Please contact the administrator.')
+                        return redirect('login')
         else:
             messages.error(request, 'Invalid username or password.')
     
@@ -1044,13 +1058,16 @@ def student_voting(request):
         # Update session status based on current time
         active_session.update_status_based_on_time()
         
-        # Check if session is actually active
-        current_status = active_session.get_current_status()
-        if current_status == 'scheduled':
-            messages.info(request, f'Voting will start at {active_session.start_date.strftime("%B %d, %Y %I:%M %p")}')
-        elif current_status == 'completed':
+        # Get current time in UTC
+        current_time = timezone.now()
+        
+        # Check session status and display appropriate message
+        if current_time < active_session.start_date:
+            messages.info(request, f'Voting will start at {timezone.localtime(active_session.start_date).strftime("%B %d, %Y %I:%M %p")}')
+            return redirect('student_home')
+        elif current_time > active_session.end_date:
             messages.info(request, 'This voting session has ended.')
-            return redirect('student_voting')
+            return redirect('student_home')
     
     if request.method == 'POST' and active_session and active_session.status == 'active':
         # Check if student has already voted
@@ -1108,18 +1125,11 @@ def student_voting(request):
             gender='female'
         ).select_related('nomination__student__user')
     
-    # Get published results
-    published_results = VotingSession.objects.filter(
-        department=student.department,
-        status='published'
-    ).order_by('-end_date')
-    
     context = {
         'active_session': active_session,
         'has_voted': has_voted,
         'male_candidates': male_candidates,
         'female_candidates': female_candidates,
-        'published_results': published_results,
     }
     return render(request, 'students/voting.html', context)
 
@@ -1490,40 +1500,56 @@ def student_voting_results(request):
     for session in published_sessions:
         session.total_votes = Vote.objects.filter(voting_session=session).count()
         
-        # Get male candidates with vote counts
-        male_candidates = Candidate.objects.filter(
+        # Get male candidates with vote counts and marks
+        male_candidates = list(Candidate.objects.filter(
             voting_session=session,
             gender='male'
-        ).select_related('nomination__student__user')
+        ).select_related('nomination__student__user', 'nomination'))
         
         for candidate in male_candidates:
             candidate.vote_count = Vote.objects.filter(
                 voting_session=session,
                 male_candidate=candidate
             ).count()
+            candidate.marks = candidate.nomination.marks
         
-        # Get female candidates with vote counts
-        female_candidates = Candidate.objects.filter(
+        # Get female candidates with vote counts and marks
+        female_candidates = list(Candidate.objects.filter(
             voting_session=session,
             gender='female'
-        ).select_related('nomination__student__user')
+        ).select_related('nomination__student__user', 'nomination'))
         
         for candidate in female_candidates:
             candidate.vote_count = Vote.objects.filter(
                 voting_session=session,
                 female_candidate=candidate
             ).count()
+            candidate.marks = candidate.nomination.marks
         
-        # Find winners
-        if male_candidates.exists():
-            session.male_winner = max(male_candidates, key=lambda c: c.vote_count)
-        else:
-            session.male_winner = None
+        # Find winners considering both votes and academic marks
+        if male_candidates:
+            # Sort by votes first, then by marks
+            male_candidates.sort(key=lambda c: (-c.vote_count, -c.marks))
+            session.male_winner = male_candidates[0]
+            # Check if there's a tie in votes
+            tied_votes = [c for c in male_candidates if c.vote_count == session.male_winner.vote_count]
+            if len(tied_votes) > 1:
+                # If there's a tie in votes, winner is determined by marks
+                session.male_winner.tied = True
+            else:
+                session.male_winner.tied = False
             
-        if female_candidates.exists():
-            session.female_winner = max(female_candidates, key=lambda c: c.vote_count)
-        else:
-            session.female_winner = None
+        if female_candidates:
+            # Sort by votes first, then by marks
+            female_candidates.sort(key=lambda c: (-c.vote_count, -c.marks))
+            session.female_winner = female_candidates[0]
+            # Check if there's a tie in votes
+            tied_votes = [c for c in female_candidates if c.vote_count == session.female_winner.vote_count]
+            if len(tied_votes) > 1:
+                # If there's a tie in votes, winner is determined by marks
+                session.female_winner.tied = True
+            else:
+                session.female_winner.tied = False
 
     context = {
         'published_sessions': published_sessions,
@@ -1553,30 +1579,62 @@ def student_view_session_results(request, session_id):
     candidates = Candidate.objects.filter(
         voting_session=session
     ).select_related(
-        'nomination__student__user'
+        'nomination__student__user',
+        'nomination'  # Add this to include nomination details
     )
 
     # Calculate total votes
     total_votes = Vote.objects.filter(voting_session=session).count()
 
-    # Calculate vote counts for each candidate
+    # Calculate vote counts and prepare candidate data
+    candidate_data = []
     for candidate in candidates:
         vote_count = Vote.objects.filter(
             Q(voting_session=session) &
             (Q(male_candidate=candidate) | Q(female_candidate=candidate))
         ).count()
-        candidate.vote_count = vote_count
-        if total_votes > 0:
-            candidate.percentage = (vote_count / total_votes) * 100
-        else:
-            candidate.percentage = 0
+        
+        candidate_data.append({
+            'candidate': candidate,
+            'vote_count': vote_count,
+            'marks': candidate.nomination.marks,  # Include marks for tiebreaker
+            'percentage': (vote_count / total_votes * 100) if total_votes > 0 else 0
+        })
 
-    # Order candidates by vote count
-    candidates = sorted(candidates, key=lambda x: x.vote_count, reverse=True)
+    # Sort candidates by votes (primary) and marks (secondary for tiebreaker)
+    candidate_data.sort(key=lambda x: (-x['vote_count'], -x['marks']))
 
-    # Separate male and female candidates
-    male_candidates = [c for c in candidates if c.gender == 'male']
-    female_candidates = [c for c in candidates if c.gender == 'female']
+    # Group candidates by gender
+    male_candidates = [data for data in candidate_data if data['candidate'].gender == 'male']
+    female_candidates = [data for data in candidate_data if data['candidate'].gender == 'female']
+
+    # Add ranking and tie information
+    def add_ranking_info(candidates_list):
+        current_rank = 1
+        current_votes = None
+        current_marks = None
+        
+        for i, data in enumerate(candidates_list):
+            if current_votes != data['vote_count']:
+                # Different vote count means new rank
+                current_rank = i + 1
+                current_votes = data['vote_count']
+                current_marks = data['marks']
+                data['tied'] = False
+            elif current_votes == data['vote_count']:
+                # Same vote count, check marks
+                if current_marks == data['marks']:
+                    # True tie (same votes and marks)
+                    data['tied'] = True
+                else:
+                    # Different marks breaks the tie
+                    data['tied'] = False
+                    current_rank = i + 1
+                    current_marks = data['marks']
+            data['rank'] = current_rank
+
+    add_ranking_info(male_candidates)
+    add_ranking_info(female_candidates)
 
     context = {
         'session': session,
@@ -1759,3 +1817,32 @@ def hod_profile(request):
         'hod': hod
     }
     return render(request, 'hod/profile.html', context)
+
+@login_required
+def hod_remove_nomination(request, nomination_id):
+    """View for HOD to remove a rejected nomination"""
+    if not hasattr(request.user, 'hod'):
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('home')
+    
+    try:
+        nomination = ClassLeaderNomination.objects.get(id=nomination_id)
+        
+        # Check if the nomination belongs to the HOD's department
+        if nomination.student.department != request.user.hod.department:
+            messages.error(request, 'You do not have permission to remove this nomination.')
+            return redirect('hod_nominations')
+        
+        # Check if the nomination is rejected
+        if nomination.status != 'rejected':
+            messages.warning(request, 'Only rejected nominations can be removed.')
+            return redirect('hod_nominations')
+        
+        # Delete the nomination
+        nomination.delete()
+        messages.success(request, f'Nomination for {nomination.student.user.get_full_name()} has been removed. The student can now reapply.')
+        
+    except ClassLeaderNomination.DoesNotExist:
+        messages.error(request, 'Nomination not found.')
+    
+    return redirect('hod_nominations')
