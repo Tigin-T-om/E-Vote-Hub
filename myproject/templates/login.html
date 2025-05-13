@@ -38,7 +38,10 @@
                             <span class="input-group-text bg-light border-end-0">
                                 <i class="fas fa-lock text-primary"></i>
                             </span>
-                            <input type="password" class="form-control border-start-0 rounded-end-pill" id="password" name="password" placeholder="Enter your password" required>
+                            <input type="password" class="form-control border-start-0 border-end-0" id="password" name="password" placeholder="Enter your password" required>
+                            <span class="input-group-text bg-light border-start-0 rounded-end-pill" onclick="togglePassword()" style="cursor: pointer;">
+                                <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                            </span>
                         </div>
                     </div>
                     <div class="d-grid">

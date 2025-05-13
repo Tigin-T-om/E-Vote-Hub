@@ -1920,3 +1920,27 @@ def student_notifications(request):
         'notifications': notifications,
     }
     return render(request, 'students/notifications.html', context)
+
+@login_required
+def withdraw_nomination(request):
+    """View for students to withdraw their nomination before HOD review"""
+    if not hasattr(request.user, 'student'):
+        messages.error(request, 'You do not have permission to perform this action.')
+        return redirect('home')
+    
+    try:
+        nomination = ClassLeaderNomination.objects.get(student=request.user.student)
+        
+        # Check if the nomination is still pending
+        if nomination.status != 'pending':
+            messages.error(request, 'You can only withdraw nominations that are pending HOD review.')
+            return redirect('student_nomination')
+        
+        # Delete the nomination
+        nomination.delete()
+        messages.success(request, 'Your nomination has been withdrawn successfully. You can submit a new nomination if you wish.')
+        
+    except ClassLeaderNomination.DoesNotExist:
+        messages.error(request, 'No nomination found to withdraw.')
+    
+    return redirect('student_nomination')

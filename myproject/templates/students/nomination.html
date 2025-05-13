@@ -57,6 +57,11 @@
                         <p class="mb-0">Status: 
                             {% if existing_nomination.status == 'pending' %}
                                 <span class="badge bg-warning text-dark">Pending</span>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#withdrawNominationModal">
+                                        <i class="fas fa-times-circle me-1"></i>Withdraw Nomination
+                                    </button>
+                                </div>
                             {% elif existing_nomination.status == 'approved' %}
                                 <span class="badge bg-success">Approved</span>
                             {% elif existing_nomination.status == 'rejected' %}
@@ -249,6 +254,36 @@
             </div>
             <div class="modal-footer">
                 <a href="{% url 'student_home' %}" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Nomination Modal -->
+<div class="modal fade" id="withdrawNominationModal" tabindex="-1" aria-labelledby="withdrawNominationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="withdrawNominationModalLabel">Withdraw Nomination</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to withdraw your nomination? This action cannot be undone.</p>
+                <p class="mb-0">By withdrawing your nomination:</p>
+                <ul>
+                    <li>Your nomination will be permanently removed</li>
+                    <li>You will be able to submit a new nomination</li>
+                    <li>The HOD will not be able to review this nomination</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'withdraw_nomination' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-1"></i>Confirm Withdrawal
+                    </button>
+                </form>
             </div>
         </div>
     </div>

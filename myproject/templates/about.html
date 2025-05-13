@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block title %}About - EVoteHub{% endblock %}
 
 {% block content %}
@@ -104,7 +106,7 @@
     <div class="col-md-4 mb-4">
         <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="/media/static/images/john_doe.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                <img src="{% static 'images/normal/b9ababec-2342-4fe7-86bd-ba0333b051f0.jpg' %}" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">John Doe</h3>
                 <p class="text-muted">Founder & CEO</p>
             </div>
@@ -114,7 +116,7 @@
     <div class="col-md-4 mb-4">
         <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="/media/static/images/jane_smith.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                <img src="{% static 'images/normal/48b231ed-197e-4d54-be1e-ab92cbc9abb0.jpg' %}" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">Jane Smith</h3>
                 <p class="text-muted">Technical Director</p>
             </div>
@@ -124,7 +126,7 @@
     <div class="col-md-4 mb-4">
         <div class="card border-0 shadow-sm rounded-4 hover-card">
             <div class="card-body text-center p-4">
-                <img src="/media/static/images/mikes.jpg" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                <img src="{% static 'images/normal/Mike_Johnson.jpg' %}" alt="Team Member" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 <h3 class="h5 fw-bold">Mike Johnson</h3>
                 <p class="text-muted">Security Lead</p>
             </div>
