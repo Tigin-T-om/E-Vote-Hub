@@ -154,6 +154,9 @@
             <a href="{% url 'student_voting_results' %}" class="nav-link {% if request.resolver_match.url_name == 'student_voting_results' %}active{% endif %}">
                 <i class="fas fa-chart-bar"></i>Voting Results
             </a>
+            <a href="{% url 'student_notifications' %}" class="nav-link {% if request.resolver_match.url_name == 'student_notifications' %}active{% endif %}">
+                <i class="fas fa-bell"></i>Notifications
+            </a>
             <a href="{% url 'student_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
                 <i class="fas fa-user"></i>My Profile
             </a>

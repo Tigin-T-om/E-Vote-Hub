@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
-from .models import Student, Department, HOD, ClassLeaderNomination, Officer, VotingSession, Candidate, Vote
+from .models import Student, Department, HOD, ClassLeaderNomination, Officer, VotingSession, Candidate, Vote, Notification
 from django.utils import timezone
 from django.db.models import Q
 from django.core.mail import send_mail
@@ -490,6 +490,36 @@ def hod_nominations(request):
     department = request.user.hod.department
     nominations = ClassLeaderNomination.objects.filter(student__department=department).order_by('-created_at')
     
+    if request.method == 'POST':
+        nomination_id = request.POST.get('nomination_id')
+        action = request.POST.get('action')
+        feedback = request.POST.get('feedback', '')
+        
+        try:
+            nomination = ClassLeaderNomination.objects.get(id=nomination_id)
+            
+            if action == 'approve':
+                nomination.status = 'approved'
+                message = f"Your nomination has been approved by the HOD. Feedback: {feedback}"
+            elif action == 'reject':
+                nomination.status = 'rejected'
+                message = f"Your nomination has been rejected by the HOD. Feedback: {feedback}"
+            
+            nomination.save()
+            
+            # Create notification
+            Notification.objects.create(
+                student=nomination.student,
+                nomination=nomination,
+                message=message
+            )
+            
+            messages.success(request, f'Nomination {action}d successfully!')
+        except Exception as e:
+            messages.error(request, f'Error processing nomination: {str(e)}')
+        
+        return redirect('hod_nominations')
+    
     # Count statistics
     total_nominations = nominations.count()
     approved_nominations = nominations.filter(status='approved').count()
@@ -535,6 +565,13 @@ def hod_approve_nomination(request, nomination_id):
             nomination.reviewed_by = request.user.hod
             nomination.reviewed_at = timezone.now()
             nomination.save()
+            
+            # Create notification for student
+            Notification.objects.create(
+                student=nomination.student,
+                nomination=nomination,
+                message=f"Your nomination has been approved by the HOD. Feedback: {feedback}"
+            )
             
             # Send notification to student
             messages.success(request, f'Nomination for {nomination.student.user.get_full_name()} has been approved and forwarded to the officer.')
@@ -582,8 +619,15 @@ def hod_reject_nomination(request, nomination_id):
             nomination.reviewed_at = timezone.now()
             nomination.save()
             
+            # Create notification for student
+            Notification.objects.create(
+                student=nomination.student,
+                nomination=nomination,
+                message=f"Your nomination has been rejected by the HOD. Feedback: {feedback}"
+            )
+            
             # Send notification to student
-            messages.success(request, f'Nomination for {nomination.student.user.get_full_name} has been rejected.')
+            messages.success(request, f'Nomination for {nomination.student.user.get_full_name()} has been rejected.')
             
             # Redirect back to nominations page
             return redirect('hod_nominations')
@@ -1512,6 +1556,7 @@ def student_voting_results(request):
                 male_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
+            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
         # Get female candidates with vote counts and marks
         female_candidates = list(Candidate.objects.filter(
@@ -1525,29 +1570,40 @@ def student_voting_results(request):
                 female_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
+            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
-        # Find winners considering both votes and academic marks
+        # Find winners considering votes, marks, and alphabetical order
         if male_candidates:
-            # Sort by votes first, then by marks
-            male_candidates.sort(key=lambda c: (-c.vote_count, -c.marks))
+            # Sort by votes first, then by marks, then alphabetically by name
+            male_candidates.sort(key=lambda c: (-c.vote_count, -c.marks, c.full_name))
             session.male_winner = male_candidates[0]
             # Check if there's a tie in votes
             tied_votes = [c for c in male_candidates if c.vote_count == session.male_winner.vote_count]
             if len(tied_votes) > 1:
-                # If there's a tie in votes, winner is determined by marks
-                session.male_winner.tied = True
+                # If there's a tie in votes, check marks
+                tied_marks = [c for c in tied_votes if c.marks == session.male_winner.marks]
+                if len(tied_marks) > 1:
+                    # If there's a tie in both votes and marks, winner is determined by alphabetical order
+                    session.male_winner.tied = True
+                else:
+                    session.male_winner.tied = False
             else:
                 session.male_winner.tied = False
             
         if female_candidates:
-            # Sort by votes first, then by marks
-            female_candidates.sort(key=lambda c: (-c.vote_count, -c.marks))
+            # Sort by votes first, then by marks, then alphabetically by name
+            female_candidates.sort(key=lambda c: (-c.vote_count, -c.marks, c.full_name))
             session.female_winner = female_candidates[0]
             # Check if there's a tie in votes
             tied_votes = [c for c in female_candidates if c.vote_count == session.female_winner.vote_count]
             if len(tied_votes) > 1:
-                # If there's a tie in votes, winner is determined by marks
-                session.female_winner.tied = True
+                # If there's a tie in votes, check marks
+                tied_marks = [c for c in tied_votes if c.marks == session.female_winner.marks]
+                if len(tied_marks) > 1:
+                    # If there's a tie in both votes and marks, winner is determined by alphabetical order
+                    session.female_winner.tied = True
+                else:
+                    session.female_winner.tied = False
             else:
                 session.female_winner.tied = False
 
@@ -1846,3 +1902,21 @@ def hod_remove_nomination(request, nomination_id):
         messages.error(request, 'Nomination not found.')
     
     return redirect('hod_nominations')
+
+@login_required
+def student_notifications(request):
+    """View for students to see their notifications"""
+    if not hasattr(request.user, 'student'):
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('home')
+    
+    student = request.user.student
+    notifications = Notification.objects.filter(student=student).select_related('nomination')
+    
+    # Mark notifications as read when viewing
+    notifications.filter(is_read=False).update(is_read=True)
+    
+    context = {
+        'notifications': notifications,
+    }
+    return render(request, 'students/notifications.html', context)

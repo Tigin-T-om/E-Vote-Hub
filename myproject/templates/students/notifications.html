@@ -1,0 +1,55 @@
+{% extends 'students/base_student.html' %}
+
+{% block title %}Notifications - EVoteHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="h4 mb-0">Notifications</h2>
+            <p class="text-muted">View your nomination feedback and updates</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if notifications %}
+                        <div class="list-group">
+                            {% for notification in notifications %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">
+                                            {% if notification.nomination.status == 'rejected' %}
+                                                <i class="fas fa-times-circle text-danger me-2"></i>Nomination Rejected
+                                            {% elif notification.nomination.status == 'approved' %}
+                                                <i class="fas fa-check-circle text-success me-2"></i>Nomination Approved
+                                            {% else %}
+                                                <i class="fas fa-info-circle text-primary me-2"></i>Nomination Update
+                                            {% endif %}
+                                        </h5>
+                                        <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="mb-1">{{ notification.message }}</p>
+                                    <small class="text-muted">
+                                        Nomination ID: {{ notification.nomination.id }} | 
+                                        Status: <span class="badge bg-{% if notification.nomination.status == 'approved' %}success{% elif notification.nomination.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                            {{ notification.nomination.status|title }}
+                                        </span>
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No notifications yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -165,3 +165,16 @@ class Vote(models.Model):
 
     class Meta:
         unique_together = ['student', 'voting_session']
+
+class Notification(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='notifications')
+    nomination = models.ForeignKey(ClassLeaderNomination, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.student.user.get_full_name()} - {self.created_at}"

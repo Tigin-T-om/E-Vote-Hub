@@ -39,6 +39,7 @@ urlpatterns = [
     path('officer/voting/results/', views.officer_voting_results, name='officer_voting_results'),
     path('hod/voting/results/', views.hod_voting_results, name='hod_voting_results'),
     path('hod/voting/results/<int:session_id>/', views.hod_view_session_results, name='hod_view_session_results'),
-    path('student/voting/results/', views.student_voting_results, name='student_voting_results'),
+    path('student/voting-results/', views.student_voting_results, name='student_voting_results'),
     path('student/voting/results/<int:session_id>/', views.student_view_session_results, name='student_view_session_results'),
+    path('student/notifications/', views.student_notifications, name='student_notifications'),
 ]
