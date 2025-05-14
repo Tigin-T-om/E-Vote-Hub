@@ -250,6 +250,43 @@ def delete_student(request, student_id):
 
 @login_required
 @user_passes_test(is_admin)
+def edit_student(request):
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        student_id_value = request.POST.get('student_id_value')
+        department_id = request.POST.get('department')
+        gender = request.POST.get('gender')
+
+        try:
+            # Get the student
+            student = Student.objects.get(id=student_id)
+            
+            # Update user details
+            user = student.user
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            
+            # Update student details
+            student.student_id = student_id_value
+            student.department_id = department_id
+            student.gender = gender
+            student.save()
+            
+            messages.success(request, 'Student details updated successfully!')
+        except Student.DoesNotExist:
+            messages.error(request, 'Student not found.')
+        except Exception as e:
+            messages.error(request, f'Error updating student: {str(e)}')
+    
+    return redirect('student_management')
+
+@login_required
+@user_passes_test(is_admin)
 def department_management(request):
     departments = Department.objects.all()
     
@@ -351,7 +388,7 @@ def student_home(request):
 @user_passes_test(is_admin)
 def hod_management(request):
     hods = HOD.objects.all().select_related('user', 'department')
-    departments = Department.objects.filter(hod=None)  # Only show departments without HODs
+    departments = Department.objects.all()  # Show all departments
     
     if request.method == 'POST':
         first_name = request.POST.get('first_name')
@@ -362,6 +399,12 @@ def hod_management(request):
         password = request.POST.get('password')
         
         try:
+            # Check if department already has an HOD
+            department = Department.objects.get(id=department_id)
+            if hasattr(department, 'hod'):
+                messages.error(request, f'Department {department.name} already has an HOD assigned.')
+                return redirect('hod_management')
+            
             # Create User with username and password
             user = User.objects.create_user(
                 username=username,
@@ -372,7 +415,6 @@ def hod_management(request):
             )
             
             # Create HOD
-            department = Department.objects.get(id=department_id)
             HOD.objects.create(
                 user=user,
                 department=department
@@ -1595,6 +1637,7 @@ def student_voting_results(request):
                 male_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
+            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
         # Get female candidates with vote counts and marks
         female_candidates = list(Candidate.objects.filter(
@@ -1608,6 +1651,7 @@ def student_voting_results(request):
                 female_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
+            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
         # Find winners considering votes, marks, and alphabetical order
         if male_candidates:

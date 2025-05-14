@@ -10,13 +10,13 @@
             <div class="card">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
+                        <!-- <div class="flex-shrink-0">
                             {% if student.profile_picture %}
-                                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
+                                <img src="#" alt="Profile Picture" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
                             {% else %}
                                 <img src="https://via.placeholder.com/64" alt="Profile Picture" class="rounded-circle">
                             {% endif %}
-                        </div>
+                        </div> -->
                         <div class="flex-grow-1 ms-3">
                             <h2 class="h4 mb-1">Welcome, {{ request.user.get_full_name }}!</h2>
                             <p class="text-muted mb-0">{{ student.department.name }} Department</p>

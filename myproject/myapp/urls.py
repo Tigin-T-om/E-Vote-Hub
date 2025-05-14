@@ -44,4 +44,5 @@ urlpatterns = [
     path('student/voting/results/<int:session_id>/', views.student_view_session_results, name='student_view_session_results'),
     path('student/notifications/', views.student_notifications, name='student_notifications'),
     path('student/withdraw-nomination/', views.withdraw_nomination, name='withdraw_nomination'),
+    path('admin/student/edit/', views.edit_student, name='edit_student'),
 ]

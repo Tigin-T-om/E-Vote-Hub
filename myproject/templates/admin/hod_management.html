@@ -49,9 +49,12 @@
                                 <select class="form-select" id="department" name="department" required>
                                     <option value="">Select Department</option>
                                     {% for department in departments %}
-                                    <option value="{{ department.id }}">{{ department.name }}</option>
+                                    <option value="{{ department.id }}" {% if department.hod %}disabled{% endif %}>
+                                        {{ department.name }}{% if department.hod %} (HOD: {{ department.hod.user.get_full_name }}){% endif %}
+                                    </option>
                                     {% endfor %}
                                 </select>
+                                <small class="text-muted">Departments with existing HODs are disabled</small>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Create HOD Account</button>
