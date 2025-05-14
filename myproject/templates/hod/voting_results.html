@@ -20,41 +20,63 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Session</th>
+                                <th>Election Date</th>
+                                <th>Male Representative</th>
+                                <th>Female Representative</th>
                                 <th>Total Votes</th>
-                                <th>Male Candidates</th>
-                                <th>Female Candidates</th>
-                                <th>Published Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for session in published_sessions %}
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold">{{ session.start_date|date:"M d, Y H:i" }} - {{ session.end_date|date:"M d, Y H:i" }}</div>
-                                        <small class="text-muted">Status: {{ session.get_status_display }}</small>
-                                    </td>
-                                    <td>{{ session.total_votes }}</td>
-                                    <td>{{ session.male_candidates|length }}</td>
-                                    <td>{{ session.female_candidates|length }}</td>
-                                    <td>{{ session.updated_at|date:"M d, Y H:i" }}</td>
-                                    <td>
-                                        <a href="{% url 'hod_view_session_results' session.id %}" 
-                                           class="btn btn-sm btn-primary">
-                                            <i class="fas fa-eye me-1"></i>View Details
-                                        </a>
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td>{{ session.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if session.male_winner %}
+                                        {{ session.male_winner.nomination.student.user.get_full_name }}
+                                        {% if session.male_winner.tied %}
+                                            <div>
+                                                <span class="badge bg-warning">Tied Vote</span>
+                                                <span class="badge bg-info">Won by Academic Score</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-success">Winner</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">No winner</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if session.female_winner %}
+                                        {{ session.female_winner.nomination.student.user.get_full_name }}
+                                        {% if session.female_winner.tied %}
+                                            <div>
+                                                <span class="badge bg-warning">Tied Vote</span>
+                                                <span class="badge bg-info">Won by Academic Score</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-success">Winner</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">No winner</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.total_votes }}</td>
+                                <td>
+                                    <a href="{% url 'hod_view_session_results' session.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-chart-bar"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-5">
+                <div class="text-center py-4">
                     <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                    <h5>No published results available</h5>
-                    <p class="text-muted">Results will appear here once they are published by the officers.</p>
+                    <h5>No Published Results</h5>
+                    <p class="text-muted mb-0">There are no published voting results for your department yet.</p>
                 </div>
             {% endif %}
         </div>

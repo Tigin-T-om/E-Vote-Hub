@@ -284,6 +284,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.files && this.files[0]) {
                 const formData = new FormData(profilePictureForm);
                 
+                // Show loading state
+                const loadingMessage = document.createElement('div');
+                loadingMessage.className = 'alert alert-info alert-dismissible fade show mt-3';
+                loadingMessage.innerHTML = `
+                    Uploading image...
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                document.querySelector('.card-body').appendChild(loadingMessage);
+                
                 fetch(window.location.href, {
                     method: 'POST',
                     body: formData,
@@ -291,19 +300,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                     }
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
+                    // Remove loading message
+                    loadingMessage.remove();
+                    
                     if (data.success) {
-                        // Update the profile picture immediately
+                        // Update the profile picture
                         if (profileImage) {
                             profileImage.src = data.image_url + '?t=' + new Date().getTime();
                         } else {
-                            // Create new image element if it doesn't exist
                             const newImage = document.createElement('img');
                             newImage.src = data.image_url + '?t=' + new Date().getTime();
                             newImage.alt = 'Profile Picture';
@@ -313,34 +319,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         // Show success message
-                        const successMessage = document.createElement('div');
-                        successMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
-                        successMessage.innerHTML = `
-                            Profile picture updated successfully!
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        `;
-                        document.querySelector('.card-body').appendChild(successMessage);
-                        
-                        // Auto-dismiss after 3 seconds
-                        setTimeout(() => {
-                            successMessage.classList.remove('show');
-                            setTimeout(() => successMessage.remove(), 150);
-                        }, 3000);
+                        showAlert('success', 'Profile picture updated successfully!');
                     } else {
-                        alert('Error uploading image: ' + data.error);
-                        // Keep the default profile picture
-                        if (defaultProfile) {
-                            defaultProfile.style.display = 'flex';
-                        }
+                        showAlert('danger', 'Error uploading image: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
+                    // Remove loading message
+                    loadingMessage.remove();
                     console.error('Error:', error);
-                    alert('Error uploading image. Please try again.');
-                    // Keep the default profile picture
-                    if (defaultProfile) {
-                        defaultProfile.style.display = 'flex';
-                    }
+                    showAlert('danger', 'Error uploading image. Please try again.');
                 });
             }
         });
@@ -369,8 +357,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('confirm_password').addEventListener('input', validateConfirmPassword);
 });
 
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.querySelector('.card-body').appendChild(alertDiv);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => alertDiv.remove(), 150);
+    }, 3000);
+}
+
 function removeProfilePicture() {
     if (confirm('Are you sure you want to remove your profile picture?')) {
+        // Show loading state
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'alert alert-info alert-dismissible fade show mt-3';
+        loadingMessage.innerHTML = `
+            Removing profile picture...
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.querySelector('.card-body').appendChild(loadingMessage);
+
         fetch(window.location.href, {
             method: 'POST',
             headers: {
@@ -381,13 +394,11 @@ function removeProfilePicture() {
                 action: 'remove_profile_picture'
             })
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
+            // Remove loading message
+            loadingMessage.remove();
+            
             if (data.success) {
                 // Replace image with default profile picture
                 const profileImage = document.getElementById('profileImage');
@@ -401,29 +412,17 @@ function removeProfilePicture() {
                         </svg>
                     `;
                     profileImage.replaceWith(defaultProfile);
-                    
-                    // Show success message
-                    const successMessage = document.createElement('div');
-                    successMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    successMessage.innerHTML = `
-                        Profile picture removed successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    document.querySelector('.card-body').appendChild(successMessage);
-                    
-                    // Auto-dismiss after 3 seconds
-                    setTimeout(() => {
-                        successMessage.classList.remove('show');
-                        setTimeout(() => successMessage.remove(), 150);
-                    }, 3000);
                 }
+                showAlert('success', 'Profile picture removed successfully!');
             } else {
-                alert('Error removing profile picture: ' + data.error);
+                showAlert('danger', 'Error removing profile picture: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
+            // Remove loading message
+            loadingMessage.remove();
             console.error('Error:', error);
-            alert('Error removing profile picture. Please try again.');
+            showAlert('danger', 'Error removing profile picture. Please try again.');
         });
     }
 }

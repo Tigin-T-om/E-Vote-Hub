@@ -7,9 +7,21 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">Student Management</h1>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-            <i class="fas fa-plus me-2"></i>Add New Student
-        </button>
+        <div class="d-flex gap-2">
+            <select class="form-select" id="yearFilter">
+                <option value="">All Years</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+            </select>
+            <button class="btn btn-danger" id="bulkDeleteBtn" disabled>
+                <i class="fas fa-trash me-2"></i>Delete Selected Year
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                <i class="fas fa-plus me-2"></i>Add New Student
+            </button>
+        </div>
     </div>
 
     <!-- Students Table -->
@@ -123,4 +135,48 @@
         </div>
     </div>
 </div>
+
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Bulk Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete all students created in the selected year? This action cannot be undone.</p>
+                <p class="text-danger"><strong>Warning:</strong> This will permanently delete all student accounts and their associated data.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'bulk_delete_students' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="year" id="deleteYear">
+                    <button type="submit" class="btn btn-danger">Delete All Students</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const yearFilter = document.getElementById('yearFilter');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const deleteYear = document.getElementById('deleteYear');
+
+    yearFilter.addEventListener('change', function() {
+        bulkDeleteBtn.disabled = !this.value;
+    });
+
+    bulkDeleteBtn.addEventListener('click', function() {
+        deleteYear.value = yearFilter.value;
+        new bootstrap.Modal(document.getElementById('bulkDeleteModal')).show();
+    });
+});
+</script>
+{% endblock %}
+
 {% endblock %}

@@ -237,7 +237,12 @@ def student_management(request):
 def delete_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     try:
-        student.user.delete()  # This will also delete the student due to CASCADE
+        # Get the username before deleting
+        username = student.user.username
+        # Delete the student (this will cascade delete the user)
+        student.delete()
+        # Also delete any user with the same username to ensure complete cleanup
+        User.objects.filter(username=username).delete()
         messages.success(request, 'Student deleted successfully!')
     except Exception as e:
         messages.error(request, f'Error deleting student: {str(e)}')
@@ -1453,17 +1458,51 @@ def hod_voting_results(request):
         status='published'
     ).order_by('-end_date')
 
-    # Add vote counts to each session
+    # Add vote counts and winners to each session
     for session in published_sessions:
         session.total_votes = Vote.objects.filter(voting_session=session).count()
-        session.male_candidates = Candidate.objects.filter(
+        
+        # Get male candidates with vote counts and marks
+        male_candidates = list(Candidate.objects.filter(
             voting_session=session,
             gender='male'
-        ).select_related('nomination__student__user')
-        session.female_candidates = Candidate.objects.filter(
+        ).select_related('nomination__student__user', 'nomination'))
+        
+        for candidate in male_candidates:
+            candidate.vote_count = Vote.objects.filter(
+                voting_session=session,
+                male_candidate=candidate
+            ).count()
+            candidate.marks = candidate.nomination.marks
+        
+        # Get female candidates with vote counts and marks
+        female_candidates = list(Candidate.objects.filter(
             voting_session=session,
             gender='female'
-        ).select_related('nomination__student__user')
+        ).select_related('nomination__student__user', 'nomination'))
+        
+        for candidate in female_candidates:
+            candidate.vote_count = Vote.objects.filter(
+                voting_session=session,
+                female_candidate=candidate
+            ).count()
+            candidate.marks = candidate.nomination.marks
+
+        # Determine male winner
+        if male_candidates:
+            male_candidates.sort(key=lambda x: (-x.vote_count, -x.marks))
+            session.male_winner = male_candidates[0]
+            # Check for ties
+            if len(male_candidates) > 1 and male_candidates[0].vote_count == male_candidates[1].vote_count:
+                session.male_winner.tied = True
+
+        # Determine female winner
+        if female_candidates:
+            female_candidates.sort(key=lambda x: (-x.vote_count, -x.marks))
+            session.female_winner = female_candidates[0]
+            # Check for ties
+            if len(female_candidates) > 1 and female_candidates[0].vote_count == female_candidates[1].vote_count:
+                session.female_winner.tied = True
 
     context = {
         'published_sessions': published_sessions,
@@ -1556,7 +1595,6 @@ def student_voting_results(request):
                 male_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
-            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
         # Get female candidates with vote counts and marks
         female_candidates = list(Candidate.objects.filter(
@@ -1570,7 +1608,6 @@ def student_voting_results(request):
                 female_candidate=candidate
             ).count()
             candidate.marks = candidate.nomination.marks
-            candidate.full_name = candidate.nomination.student.user.get_full_name()
         
         # Find winners considering votes, marks, and alphabetical order
         if male_candidates:
@@ -1944,3 +1981,36 @@ def withdraw_nomination(request):
         messages.error(request, 'No nomination found to withdraw.')
     
     return redirect('student_nomination')
+
+@login_required
+@user_passes_test(is_admin)
+def bulk_delete_students(request):
+    if request.method == 'POST':
+        year = request.POST.get('year')
+        if not year:
+            messages.error(request, 'Please select a year to delete students.')
+            return redirect('student_management')
+        
+        try:
+            # Get all students created in the selected year
+            students = Student.objects.filter(created_at__year=year)
+            count = students.count()
+            
+            if count == 0:
+                messages.warning(request, f'No students found created in {year}.')
+                return redirect('student_management')
+            
+            # Get all usernames before deletion
+            usernames = [student.user.username for student in students]
+            
+            # Delete all students (this will cascade delete their user accounts)
+            students.delete()
+            
+            # Also delete any remaining users with the same usernames
+            User.objects.filter(username__in=usernames).delete()
+            
+            messages.success(request, f'Successfully deleted {count} students created in {year}.')
+        except Exception as e:
+            messages.error(request, f'Error deleting students: {str(e)}')
+    
+    return redirect('student_management')

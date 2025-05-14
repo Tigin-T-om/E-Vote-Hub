@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/students/', views.student_management, name='student_management'),
     path('admin/students/delete/<int:student_id>/', views.delete_student, name='delete_student'),
+    path('admin/students/bulk-delete/', views.bulk_delete_students, name='bulk_delete_students'),
     path('admin/departments/', views.department_management, name='department_management'),
     path('admin/departments/delete/<int:department_id>/', views.delete_department, name='delete_department'),
     path('admin/hods/', views.hod_management, name='hod_management'),
