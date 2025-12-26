@@ -38,16 +38,16 @@ The project is built using Django and follows a clean backend-driven architeture
 ## Project Structure
 
 E-Vote-Hub/
-│── core/ # Django project settings
-│── voting/ # Main voting application
-│── templates/ # HTML templates
-│── static/ # CSS, JS, images
-│── manage.pyE-Vote-Hub/
-│── core/ # Django project settings
-│── voting/ # Main voting application
-│── templates/ # HTML templates
-│── static/ # CSS, JS, images
-│── manage.py
+│── core/ # Django project settings  
+│── voting/ # Main voting application  
+│── templates/ # HTML templates  
+│── static/ # CSS, JS, images  
+│── manage.py    
+│── core/ # Django project settings  
+│── voting/ # Main voting application  
+│── templates/ # HTML templates  
+│── static/ # CSS, JS, images  
+│── manage.py  
 
 ---
 
@@ -106,11 +106,11 @@ E-Vote-Hub/
 
 ## Author
 
-Project Name: E-Vote-Hub
-Developed by: Your Name
-Course: MCA / BCA / B.Tech
-Institution: Your College Name
-Academic Year: 2024–2025
+Project Name: E-Vote-Hub  
+Developed by: Your Name  
+Course: MCA / BCA / B.Tech  
+Institution: Your College Name  
+Academic Year: 2024–2025  
 
 ---
 
