@@ -1,22 +1,48 @@
+# ========================
 # Python
-*.pyc
+# ========================
 __pycache__/
+*.py[cod]
 
-# Env
-env/
+# ========================
+# Virtual Environment
+# ========================
 venv/
+.venv/
+ENV/
 
+# ========================
 # Django
-db.sqlite3
+# ========================
 *.log
+db.sqlite3
 media/
+staticfiles/
+local_settings.py
 
-# VS Code
+# ========================
+# Environment Variables (Secrets)
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+# Migrations (IMPORTANT)
+# ========================
+# Keep migrations, ignore only cache
+**/migrations/__pycache__/
+
+# ========================
+# Editor / IDE
+# ========================
 .vscode/
+.cursor/
+*.swp
+*.swo
 
-# OS
+# ========================
+# OS Files
+# ========================
 .DS_Store
 Thumbs.db
-
-# Django Admin
-admin/
